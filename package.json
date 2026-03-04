@@ -9,6 +9,9 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@hashgraph/hedera-wallet-connect": "^2.0.6",
+    "@hiero-ledger/sdk": "^2.80.0",
+    "@walletconnect/modal": "^2.7.0",
     "lucide-react": "^0.575.0",
     "next": "16.1.6",
     "react": "19.2.3",

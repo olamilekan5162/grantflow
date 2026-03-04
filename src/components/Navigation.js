@@ -14,6 +14,8 @@ import {
   Zap,
 } from "lucide-react";
 import WalletModal from "./WalletModal";
+import { useHederaWallet } from "@/hooks/useHederaWallet";
+import { Wallet } from "lucide-react";
 
 const NAV_LINKS = [{ href: "/explore", label: "Explore" }];
 
@@ -25,8 +27,10 @@ const ROLE_DASHBOARD = {
 };
 
 export default function Navigation() {
+  const { account, connect, isConnected, disconnect, loading, balance } =
+    useHederaWallet();
   const {
-    isConnected,
+    isConnected: isDummyCOnnect,
     walletAddress,
     userRole,
     disconnectWallet,
@@ -76,7 +80,8 @@ export default function Navigation() {
                   Dashboard
                 </Link>
               )}
-              {isConnected && userRole === "funder" && (
+
+              {isConnected && (
                 <Link
                   href="/funder/grants/create"
                   className={`text-sm font-medium transition-colors ${pathname === "/funder/grants/create" ? "text-blue-600" : "text-slate-600 hover:text-slate-900"}`}
@@ -94,16 +99,17 @@ export default function Navigation() {
                     onClick={() => setWalletDropdown(!walletDropdown)}
                     className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-100 transition-colors"
                   >
-                    <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
-                      {walletAddress.slice(0, 2).toUpperCase()}
-                    </div>
-                    <span className="hidden sm:block font-mono">
-                      {walletAddress}
-                    </span>
+                    {/* <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
+                      {account}
+                    </div> */}
+                    <span className="font-mono">{account}</span>
                     <ChevronDown size={14} />
                   </button>
                   {walletDropdown && (
                     <div className="absolute right-0 top-full mt-2 w-48 bg-white border border-slate-200 rounded-xl shadow-lg py-1 z-50">
+                      <div className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">
+                        <Wallet size={14} /> Balance: {balance.toFixed(0)} HBAR
+                      </div>
                       <Link
                         href="/onboarding/role"
                         onClick={() => setWalletDropdown(false)}
@@ -121,7 +127,7 @@ export default function Navigation() {
                       <hr className="my-1 border-slate-100" />
                       <button
                         onClick={() => {
-                          disconnectWallet();
+                          disconnect();
                           setWalletDropdown(false);
                         }}
                         className="flex items-center gap-2 px-4 py-2 text-sm text-red-500 hover:bg-red-50 w-full text-left"
@@ -133,7 +139,7 @@ export default function Navigation() {
                 </div>
               ) : (
                 <button
-                  onClick={() => setShowWalletModal(true)}
+                  onClick={() => connect()}
                   className="bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-800 transition-colors"
                 >
                   Connect Wallet
