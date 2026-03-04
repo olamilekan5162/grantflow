@@ -1,9 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useApp } from "@/context/AppContext";
 import {
   Menu,
   X,
@@ -12,10 +11,11 @@ import {
   User,
   LayoutDashboard,
   Zap,
+  Wallet,
+  Loader2,
 } from "lucide-react";
-import WalletModal from "./WalletModal";
 import { useHederaWallet } from "@/hooks/useHederaWallet";
-import { Wallet } from "lucide-react";
+import OnboardingModal from "./OnboardingModal";
 
 const NAV_LINKS = [{ href: "/explore", label: "Explore" }];
 
@@ -26,6 +26,21 @@ const ROLE_DASHBOARD = {
   public: "/explore",
 };
 
+/**
+ * Parse the Hedera account memo into a profile object.
+ * Returns null if memo is empty / not valid JSON.
+ */
+function parseMemo(memo) {
+  if (!memo || memo.trim() === "") return null;
+  try {
+    const parsed = JSON.parse(memo);
+    if (parsed && parsed.role) return parsed;
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 export default function Navigation() {
   const {
     account,
@@ -34,25 +49,51 @@ export default function Navigation() {
     disconnect,
     loading,
     balance,
+    memo,
     updateAccountInfo,
   } = useHederaWallet();
 
-  const {
-    isConnected: isDummyCOnnect,
-    walletAddress,
-    userRole,
-    disconnectWallet,
-    setShowWalletModal,
-    showWalletModal,
-  } = useApp();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [walletDropdown, setWalletDropdown] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
+  // Track which account ID we've already evaluated so we don't re-show
+  // the modal on every memo update after the user saves their profile.
+  const checkedAccountRef = useRef(null);
+
   const pathname = usePathname();
   const router = useRouter();
 
-  const dashboardHref = userRole
-    ? ROLE_DASHBOARD[userRole]
-    : "/onboarding/role";
+  // Derive role from memo
+  const profile = parseMemo(memo);
+  const userRole = profile?.role || null;
+  const dashboardHref = userRole ? ROLE_DASHBOARD[userRole] : "/explore";
+
+  // When a fresh account is detected, wait for memo to be resolved then
+  // show the onboarding modal if no valid profile is found.
+  // `memo` is null both when "not yet fetched" and when "empty account memo".
+  // We use `loading` (from the hook) going from true→false to know the
+  // getAccountInfo call inside connect() has finished.
+  useEffect(() => {
+    if (!isConnected || !account) return;
+    // Already checked this account this session — don't re-trigger
+    if (checkedAccountRef.current === account) return;
+    // Still loading — wait for loading to finish before deciding
+    if (loading) return;
+    // Mark this account as checked
+    checkedAccountRef.current = account;
+    const parsed = parseMemo(memo);
+    if (!parsed) {
+      setShowOnboarding(true);
+    } else {
+      setShowOnboarding(false);
+    }
+  }, [isConnected, account, memo, loading]);
+
+  const handleOnboardingComplete = (role) => {
+    setShowOnboarding(false);
+    router.push(ROLE_DASHBOARD[role] || "/explore");
+  };
 
   return (
     <>
@@ -69,17 +110,17 @@ export default function Navigation() {
               </span>
             </Link>
 
-            {/* <button onClick={() => updateAccountInfo("Janet My love love")}>
-              Update
-            </button> */}
-
             {/* Desktop Nav */}
             <nav className="hidden md:flex items-center gap-6">
               {NAV_LINKS.map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`text-sm font-medium transition-colors ${pathname === link.href ? "text-blue-600" : "text-slate-600 hover:text-slate-900"}`}
+                  className={`text-sm font-medium transition-colors ${
+                    pathname === link.href
+                      ? "text-blue-600"
+                      : "text-slate-600 hover:text-slate-900"
+                  }`}
                 >
                   {link.label}
                 </Link>
@@ -87,16 +128,23 @@ export default function Navigation() {
               {isConnected && (
                 <Link
                   href={dashboardHref}
-                  className={`text-sm font-medium transition-colors ${pathname.includes("dashboard") ? "text-blue-600" : "text-slate-600 hover:text-slate-900"}`}
+                  className={`text-sm font-medium transition-colors ${
+                    pathname.includes("dashboard")
+                      ? "text-blue-600"
+                      : "text-slate-600 hover:text-slate-900"
+                  }`}
                 >
                   Dashboard
                 </Link>
               )}
-
-              {isConnected && (
+              {isConnected && userRole === "funder" && (
                 <Link
                   href="/funder/grants/create"
-                  className={`text-sm font-medium transition-colors ${pathname === "/funder/grants/create" ? "text-blue-600" : "text-slate-600 hover:text-slate-900"}`}
+                  className={`text-sm font-medium transition-colors ${
+                    pathname === "/funder/grants/create"
+                      ? "text-blue-600"
+                      : "text-slate-600 hover:text-slate-900"
+                  }`}
                 >
                   Create Grant
                 </Link>
@@ -111,24 +159,32 @@ export default function Navigation() {
                     onClick={() => setWalletDropdown(!walletDropdown)}
                     className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-100 transition-colors"
                   >
-                    {/* <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
-                      {account}
-                    </div> */}
-                    <span className="font-mono">{account}</span>
+                    <div className="w-2 h-2 rounded-full bg-emerald-400 shrink-0" />
+                    <span className="font-mono hidden sm:block">{account}</span>
                     <ChevronDown size={14} />
                   </button>
+
                   {walletDropdown && (
-                    <div className="absolute right-0 top-full mt-2 w-48 bg-white border border-slate-200 rounded-xl shadow-lg py-1 z-50">
-                      <div className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">
-                        <Wallet size={14} /> Balance: {balance.toFixed(0)} HBAR
+                    <div className="absolute right-0 top-full mt-2 w-52 bg-white border border-slate-200 rounded-xl shadow-lg py-1 z-50">
+                      {/* Balance */}
+                      <div className="flex items-center gap-2 px-4 py-2.5 text-sm text-slate-500 border-b border-slate-100">
+                        <Wallet size={14} />
+                        <span>
+                          {typeof balance === "number"
+                            ? balance.toFixed(2)
+                            : "—"}{" "}
+                          HBAR
+                        </span>
                       </div>
-                      <Link
-                        href="/onboarding/role"
-                        onClick={() => setWalletDropdown(false)}
-                        className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
-                      >
-                        <User size={14} /> Profile
-                      </Link>
+                      {/* Role badge */}
+                      {userRole && (
+                        <div className="px-4 py-2 text-xs text-slate-400 border-b border-slate-100">
+                          Role:{" "}
+                          <span className="font-semibold text-slate-700 capitalize">
+                            {userRole}
+                          </span>
+                        </div>
+                      )}
                       <Link
                         href={dashboardHref}
                         onClick={() => setWalletDropdown(false)}
@@ -136,6 +192,15 @@ export default function Navigation() {
                       >
                         <LayoutDashboard size={14} /> Dashboard
                       </Link>
+                      <button
+                        onClick={() => {
+                          setShowOnboarding(true);
+                          setWalletDropdown(false);
+                        }}
+                        className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 w-full text-left"
+                      >
+                        <User size={14} /> Edit Profile
+                      </button>
                       <hr className="my-1 border-slate-100" />
                       <button
                         onClick={() => {
@@ -152,11 +217,20 @@ export default function Navigation() {
               ) : (
                 <button
                   onClick={() => connect()}
-                  className="bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-800 transition-colors"
+                  disabled={loading}
+                  className="flex items-center gap-2 bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-800 transition-colors disabled:opacity-60"
                 >
-                  Connect Wallet
+                  {loading ? (
+                    <>
+                      <Loader2 size={14} className="animate-spin" />{" "}
+                      Connecting...
+                    </>
+                  ) : (
+                    "Connect Wallet"
+                  )}
                 </button>
               )}
+
               {/* Mobile hamburger */}
               <button
                 className="md:hidden p-2 rounded-lg hover:bg-slate-100"
@@ -206,9 +280,10 @@ export default function Navigation() {
                     connect();
                     setMobileOpen(false);
                   }}
-                  className="w-full mt-2 bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-medium"
+                  disabled={loading}
+                  className="w-full mt-2 bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-medium disabled:opacity-60"
                 >
-                  Connect Wallet
+                  {loading ? "Connecting..." : "Connect Wallet"}
                 </button>
               )}
             </div>
@@ -216,7 +291,13 @@ export default function Navigation() {
         )}
       </header>
 
-      {showWalletModal && <WalletModal />}
+      {/* Onboarding Modal */}
+      {showOnboarding && (
+        <OnboardingModal
+          onComplete={handleOnboardingComplete}
+          updateAccountInfo={updateAccountInfo}
+        />
+      )}
     </>
   );
 }
