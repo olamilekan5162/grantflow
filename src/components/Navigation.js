@@ -27,8 +27,16 @@ const ROLE_DASHBOARD = {
 };
 
 export default function Navigation() {
-  const { account, connect, isConnected, disconnect, loading, balance } =
-    useHederaWallet();
+  const {
+    account,
+    connect,
+    isConnected,
+    disconnect,
+    loading,
+    balance,
+    updateAccountInfo,
+  } = useHederaWallet();
+
   const {
     isConnected: isDummyCOnnect,
     walletAddress,
@@ -60,6 +68,10 @@ export default function Navigation() {
                 GrantFlow
               </span>
             </Link>
+
+            {/* <button onClick={() => updateAccountInfo("Janet My love love")}>
+              Update
+            </button> */}
 
             {/* Desktop Nav */}
             <nav className="hidden md:flex items-center gap-6">
@@ -191,7 +203,7 @@ export default function Navigation() {
               {!isConnected && (
                 <button
                   onClick={() => {
-                    setShowWalletModal(true);
+                    connect();
                     setMobileOpen(false);
                   }}
                   className="w-full mt-2 bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-medium"
