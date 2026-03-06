@@ -41,17 +41,8 @@ function parseMemo(memo) {
 }
 
 export default function Navigation() {
-  const {
-    account,
-    connect,
-    isConnected,
-    disconnect,
-    loading,
-    balance,
-    memo,
-    createTopic,
-    submitMessage,
-  } = useApp();
+  const { account, connect, isConnected, disconnect, loading, balance, memo } =
+    useApp();
 
   const [mobileOpen, setMobileOpen] = useState(false);
   const [walletDropdown, setWalletDropdown] = useState(false);
