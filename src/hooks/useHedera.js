@@ -1,18 +1,19 @@
 import { getConnector } from "@/lib/walletConnect";
 import {
+  AccountId,
   TopicCreateTransaction,
   TopicMessageSubmitTransaction,
 } from "@hiero-ledger/sdk";
 
 const useHedera = () => {
-  const createTopic = async () => {
-    if (!account) {
+  const createTopic = async (accountId) => {
+    if (!accountId) {
       console.log("wallet not connected");
       return;
     }
     try {
       const connector = getConnector();
-      const signer = connector.getSigner(AccountId.fromString(account));
+      const signer = connector.getSigner(AccountId.fromString(accountId));
 
       const transaction = await new TopicCreateTransaction()
         .setTopicMemo("Registry Topic")
@@ -27,9 +28,9 @@ const useHedera = () => {
     }
   };
 
-  const submitMessage = async (topicId, message) => {
+  const submitMessage = async (accountId, topicId, message) => {
     console.log(topicId, message);
-    if (!account) {
+    if (!accountId) {
       console.log("wallet not connected");
       return;
     }
@@ -39,7 +40,7 @@ const useHedera = () => {
 
     try {
       const connector = getConnector();
-      const signer = connector.getSigner(AccountId.fromString(account));
+      const signer = connector.getSigner(AccountId.fromString(accountId));
 
       const transaction = await new TopicMessageSubmitTransaction()
         .setTopicId(topicId)
@@ -48,6 +49,8 @@ const useHedera = () => {
 
       const transactionId = transaction.transactionId;
       console.log("Transaction ID:", transactionId.toString());
+
+      return transactionId;
     } catch (e) {
       console.log("error", e);
     }
