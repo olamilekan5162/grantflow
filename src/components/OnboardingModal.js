@@ -14,16 +14,6 @@ const ROLES = [
     label: "Grant Recipient",
     subtitle: "Nonprofit, Artist, Researcher",
   },
-  {
-    id: "verifier",
-    label: "Verifier",
-    subtitle: "Inspector, Expert, Community",
-  },
-  {
-    id: "public",
-    label: "Public Browser",
-    subtitle: "Citizen, Journalist, Donor",
-  },
 ];
 
 const ORG_TYPES = [
@@ -68,8 +58,7 @@ export default function OnboardingModal({ onComplete, updateAccountInfo }) {
     if (!role) return false;
     if (role === "funder") return !!form.orgName;
     if (role === "recipient") return !!form.name;
-    if (role === "verifier") return !!form.fullName && !!form.expertise;
-    return true; // public — no required fields
+    return true;
   };
 
   const handleSubmit = async () => {
@@ -237,64 +226,6 @@ export default function OnboardingModal({ onComplete, updateAccountInfo }) {
                       placeholder="City, State"
                       value={form.location || ""}
                       onChange={setField("location")}
-                    />
-                  </div>
-                </div>
-              )}
-
-              {/* ── Verifier fields ── */}
-              {role === "verifier" && (
-                <div className="space-y-4">
-                  <div className="h-px bg-slate-100" />
-                  <div>
-                    <label className={labelCls}>
-                      Full Name <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      className={inputCls}
-                      placeholder="Your legal name"
-                      value={form.fullName || ""}
-                      onChange={setField("fullName")}
-                    />
-                  </div>
-                  <div>
-                    <label className={labelCls}>
-                      Expertise <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                      className={inputCls}
-                      value={form.expertise || ""}
-                      onChange={setField("expertise")}
-                    >
-                      <option value="">Select expertise...</option>
-                      {EXPERTISE.map((e) => (
-                        <option key={e}>{e}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className={labelCls}>Affiliation</label>
-                    <input
-                      className={inputCls}
-                      placeholder="e.g., Austin Public Works"
-                      value={form.affiliation || ""}
-                      onChange={setField("affiliation")}
-                    />
-                  </div>
-                </div>
-              )}
-
-              {/* ── Public fields ── */}
-              {role === "public" && (
-                <div className="space-y-4">
-                  <div className="h-px bg-slate-100" />
-                  <div>
-                    <label className={labelCls}>Display Name (optional)</label>
-                    <input
-                      className={inputCls}
-                      placeholder="How should we call you?"
-                      value={form.displayName || ""}
-                      onChange={setField("displayName")}
                     />
                   </div>
                 </div>

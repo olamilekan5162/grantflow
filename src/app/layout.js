@@ -3,6 +3,7 @@ import "./globals.css";
 import { AppProvider } from "@/context/AppContext";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
+import ClientOnboarding from "@/components/ClientOnboarding";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -18,6 +19,7 @@ export default function RootLayout({ children }) {
       <body className="bg-white text-slate-800 antialiased">
         <AppProvider>
           <Navigation />
+          <ClientOnboarding />
           <main className="min-h-screen">{children}</main>
           <Footer />
         </AppProvider>

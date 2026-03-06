@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -14,8 +14,7 @@ import {
   Wallet,
   Loader2,
 } from "lucide-react";
-import { useHederaWallet } from "@/hooks/useHederaWallet";
-import OnboardingModal from "./OnboardingModal";
+import { useApp } from "@/context/AppContext";
 
 const NAV_LINKS = [{ href: "/explore", label: "Explore" }];
 
@@ -50,16 +49,12 @@ export default function Navigation() {
     loading,
     balance,
     memo,
-    updateAccountInfo,
-  } = useHederaWallet();
+    createTopic,
+    submitMessage,
+  } = useApp();
 
   const [mobileOpen, setMobileOpen] = useState(false);
   const [walletDropdown, setWalletDropdown] = useState(false);
-  const [showOnboarding, setShowOnboarding] = useState(false);
-
-  // Track which account ID we've already evaluated so we don't re-show
-  // the modal on every memo update after the user saves their profile.
-  const checkedAccountRef = useRef(null);
 
   const pathname = usePathname();
   const router = useRouter();
@@ -68,32 +63,6 @@ export default function Navigation() {
   const profile = parseMemo(memo);
   const userRole = profile?.role || null;
   const dashboardHref = userRole ? ROLE_DASHBOARD[userRole] : "/explore";
-
-  // When a fresh account is detected, wait for memo to be resolved then
-  // show the onboarding modal if no valid profile is found.
-  // `memo` is null both when "not yet fetched" and when "empty account memo".
-  // We use `loading` (from the hook) going from true→false to know the
-  // getAccountInfo call inside connect() has finished.
-  useEffect(() => {
-    if (!isConnected || !account) return;
-    // Already checked this account this session — don't re-trigger
-    if (checkedAccountRef.current === account) return;
-    // Still loading — wait for loading to finish before deciding
-    if (loading) return;
-    // Mark this account as checked
-    checkedAccountRef.current = account;
-    const parsed = parseMemo(memo);
-    if (!parsed) {
-      setShowOnboarding(true);
-    } else {
-      setShowOnboarding(false);
-    }
-  }, [isConnected, account, memo, loading]);
-
-  const handleOnboardingComplete = (role) => {
-    setShowOnboarding(false);
-    router.push(ROLE_DASHBOARD[role] || "/explore");
-  };
 
   return (
     <>
@@ -194,10 +163,10 @@ export default function Navigation() {
                       </Link>
                       <button
                         onClick={() => {
-                          setShowOnboarding(true);
+                          // TODO Trigger global onboarding via context if needed manually
                           setWalletDropdown(false);
                         }}
-                        className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 w-full text-left"
+                        className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 w-full text-left hidden"
                       >
                         <User size={14} /> Edit Profile
                       </button>
@@ -290,14 +259,6 @@ export default function Navigation() {
           </div>
         )}
       </header>
-
-      {/* Onboarding Modal */}
-      {showOnboarding && (
-        <OnboardingModal
-          onComplete={handleOnboardingComplete}
-          updateAccountInfo={updateAccountInfo}
-        />
-      )}
     </>
   );
 }

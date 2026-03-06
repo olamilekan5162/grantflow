@@ -1,53 +1,176 @@
 "use client";
-
-import { createContext, useContext, useState } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+} from "react";
+import { initializeWalletConnect, getConnector } from "../lib/walletConnect";
+import {
+  AccountId,
+  AccountUpdateTransaction,
+  TopicCreateTransaction,
+  TopicMessageSubmitTransaction,
+} from "@hiero-ledger/sdk";
 
 const AppContext = createContext(null);
 
 export function AppProvider({ children }) {
   const [isConnected, setIsConnected] = useState(false);
-  const [walletAddress, setWalletAddress] = useState("");
-  const [walletBalance, setWalletBalance] = useState(250000);
-  const [userRole, setUserRole] = useState(null); // 'funder' | 'recipient' | 'verifier' | 'public' | null
-  const [showWalletModal, setShowWalletModal] = useState(false);
-  const [onboardingComplete, setOnboardingComplete] = useState(false);
-  const [userProfile, setUserProfile] = useState(null);
+  const [account, setAccount] = useState(null);
+  const [balance, setBalance] = useState(null);
+  const [memo, setMemo] = useState(null);
+  const [loading, setLoading] = useState(false);
 
-  const connectWallet = (walletType) => {
-    const addresses = {
-      HashPack: "0x742...d3F1",
-      Blade: "0x891...aB2C",
-      WalletConnect: "0x3F4...e7D9",
-      Email: "0x1A2...c4E5",
+  const getAccountInfo = useCallback(
+    async (accountId = account) => {
+      if (!accountId) return null;
+
+      try {
+        const url = `https://testnet.mirrornode.hedera.com/api/v1/accounts/${accountId}?limit=25&order=desc&transactions=true`;
+        const response = await fetch(url);
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log("Account data:", data);
+
+        if (data.balance) {
+          const tinybarBalance = data.balance.balance;
+          const hbarBalance = tinybarBalance / 100000000;
+          setBalance(hbarBalance);
+        }
+
+        const accountMemo = data.memo || null;
+        setMemo(accountMemo);
+
+        return {
+          balance: data.balance ? data.balance.balance / 100000000 : null,
+          memo: data.memo || null,
+        };
+      } catch (error) {
+        console.error("Failed to fetch balance:", error);
+        return null;
+      }
+    },
+    [account],
+  );
+
+  useEffect(() => {
+    const init = async () => {
+      await initializeWalletConnect();
+      const connector = getConnector();
+      if (!connector) return;
+
+      // Check for an existing session to restore after page reload
+      let activeSession = connector.session;
+
+      if (!activeSession && connector.signClient?.session) {
+        const sessions =
+          typeof connector.signClient.session.getAll === "function"
+            ? connector.signClient.session.getAll()
+            : connector.signClient.session.values || [];
+
+        if (sessions.length > 0) {
+          activeSession = sessions[sessions.length - 1]; // Use the most recent session
+          connector.session = activeSession; // Assign it to the connector
+        }
+      }
+
+      if (activeSession) {
+        const accounts = activeSession.namespaces?.hedera?.accounts || [];
+        if (accounts.length > 0) {
+          const accountId = accounts[0].split(":").pop();
+          setAccount(accountId);
+          setIsConnected(true);
+          await getAccountInfo(accountId);
+        }
+      }
     };
-    setWalletAddress(addresses[walletType] || "0x742...d3F1");
-    setIsConnected(true);
-    setShowWalletModal(false);
+    init();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const connect = async () => {
+    setLoading(true);
+    try {
+      const connector = getConnector();
+      if (!connector) throw new Error("Connector not initialized");
+
+      const session = await connector.openModal();
+
+      if (session?.namespaces?.hedera?.accounts?.length > 0) {
+        const accounts = session.namespaces?.hedera?.accounts[0];
+        const accountId = accounts.split(":").pop();
+        setAccount(accountId);
+        setIsConnected(true);
+        await getAccountInfo(accountId);
+      }
+    } catch (error) {
+      console.error("Connection failed:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const disconnectWallet = () => {
-    setIsConnected(false);
-    setWalletAddress("");
-    setUserRole(null);
-    setOnboardingComplete(false);
+  const disconnect = async () => {
+    const connector = getConnector();
+    if (connector) {
+      await connector.disconnect();
+      setIsConnected(false);
+      setAccount(null);
+      setBalance(null);
+      setMemo(null);
+    }
   };
+
+  const updateAccountInfo = async (newMemo) => {
+    try {
+      if (!account) {
+        return;
+      }
+      const connector = getConnector();
+      const signer = connector.getSigner(AccountId.fromString(account));
+
+      const transaction = await new AccountUpdateTransaction()
+        .setAccountId(account)
+        .setAccountMemo(newMemo)
+        .executeWithSigner(signer);
+
+      const transactionId = await transaction.transactionId.toString();
+      console.log("transactionId", transactionId);
+
+      await getAccountInfo(account);
+
+      return transactionId;
+    } catch (e) {
+      console.log("error", e);
+      throw e;
+    }
+  };
+
+  const refreshAccountInfo = useCallback(async () => {
+    if (account) {
+      return await getAccountInfo();
+    }
+  }, [account, getAccountInfo]);
 
   return (
     <AppContext.Provider
       value={{
         isConnected,
-        walletAddress,
-        walletBalance,
-        userRole,
-        setUserRole,
-        showWalletModal,
-        setShowWalletModal,
-        onboardingComplete,
-        setOnboardingComplete,
-        userProfile,
-        setUserProfile,
-        connectWallet,
-        disconnectWallet,
+        account,
+        balance,
+        memo,
+        loading,
+        connect,
+        disconnect,
+        getAccountInfo,
+        refreshAccountInfo,
+        updateAccountInfo,
       }}
     >
       {children}
