@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { mockVerifiers } from "@/lib/mockData";
-import { Plus, Trash2, ChevronRight, ChevronLeft } from "lucide-react";
+import { useApp } from "@/context/AppContext";
+import { submitGrant } from "@/utils/submissionHelpers";
+import { Plus, Trash2, ChevronRight, ChevronLeft, Loader2 } from "lucide-react";
 
 const STEPS = ["Basics", "Milestones", "Recipients", "Review & Deposit"];
 
@@ -17,6 +18,8 @@ const INITIAL_MILESTONE = {
 
 export default function CreateGrantPage() {
   const router = useRouter();
+  const { account, balance } = useApp();
+  const [submitError, setSubmitError] = useState("");
   const [step, setStep] = useState(0);
 
   // Step 1 state
@@ -62,13 +65,47 @@ export default function CreateGrantPage() {
       prev.includes(r) ? prev.filter((x) => x !== r) : [...prev, r],
     );
 
-  const handleDeposit = () => {
+  const handleDeposit = async () => {
     setDepositing(true);
-    setTimeout(() => {
-      setDepositing(false);
+    setSubmitError("");
+    try {
+      const grantData = {
+        title: basics.title,
+        description: basics.description,
+        category: basics.category,
+        budget: Number(basics.budget),
+        totalBudget: Number(basics.budget),
+        currency: basics.currency,
+        deadline: basics.deadline,
+        milestones: milestones.map((ms, i) => ({
+          name: ms.name,
+          percentage: Number(ms.percentage),
+          amount: Math.round(
+            (Number(basics.budget) * Number(ms.percentage)) / 100,
+          ),
+          verificationType: ms.verificationType,
+          verifier: ms.verifier,
+          description: ms.description,
+          index: i,
+        })),
+        recipientType,
+        maxRecipients: numAwards ? Number(numAwards) : null,
+        inviteList: recipientType === "invite" ? inviteList : [],
+        requirements,
+      };
+
+      await submitGrant(account, grantData);
+
       setLaunched(true);
       setTimeout(() => router.push("/funder/dashboard"), 1500);
-    }, 1500);
+    } catch (err) {
+      console.error("Grant submission failed:", err);
+      setSubmitError(
+        err.message || "Failed to submit grant. Please try again.",
+      );
+    } finally {
+      setDepositing(false);
+    }
   };
 
   const inputCls =
@@ -532,7 +569,9 @@ export default function CreateGrantPage() {
             <div className="flex justify-between text-sm">
               <span className="text-slate-500">Wallet Balance</span>
               <span className="font-medium text-emerald-600">
-                $250,000 USDC
+                {typeof balance === "number"
+                  ? `${balance.toFixed(2)} HBAR`
+                  : "—"}
               </span>
             </div>
           </div>
@@ -548,15 +587,32 @@ export default function CreateGrantPage() {
               </p>
             </div>
           ) : (
-            <button
-              onClick={handleDeposit}
-              disabled={depositing}
-              className="w-full bg-slate-900 text-white px-6 py-3.5 rounded-xl text-base font-semibold hover:bg-slate-800 transition-colors disabled:opacity-60"
-            >
-              {depositing
-                ? "Processing Deposit..."
-                : "💸 Deposit & Launch Grant"}
-            </button>
+            <>
+              {submitError && (
+                <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-4">
+                  <p className="text-sm text-red-700">{submitError}</p>
+                </div>
+              )}
+              <button
+                onClick={handleDeposit}
+                disabled={depositing || !account}
+                className="w-full flex items-center justify-center gap-2 bg-slate-900 text-white px-6 py-3.5 rounded-xl text-base font-semibold hover:bg-slate-800 transition-colors disabled:opacity-60"
+              >
+                {depositing ? (
+                  <>
+                    <Loader2 size={18} className="animate-spin" />
+                    Submitting to Hedera...
+                  </>
+                ) : (
+                  "💸 Deposit & Launch Grant"
+                )}
+              </button>
+              {!account && (
+                <p className="text-xs text-center text-amber-600 mt-2">
+                  Connect your wallet first to launch a grant.
+                </p>
+              )}
+            </>
           )}
         </div>
       )}

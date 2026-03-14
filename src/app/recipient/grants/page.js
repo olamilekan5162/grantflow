@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
-import { mockGrants } from "@/lib/mockData";
+import { useState, useEffect } from "react";
+import { useApp } from "@/context/AppContext";
+import { useGrantFlow } from "@/hooks/useGrantFlow";
 import GrantCard from "@/components/GrantCard";
-import { Search } from "lucide-react";
+import { Search, Loader2 } from "lucide-react";
 
 const CATEGORIES = [
   "All",
@@ -16,17 +17,41 @@ const CATEGORIES = [
 ];
 
 export default function BrowseGrantsPage() {
+  const { account } = useApp();
+  const { loadAvailableGrants, loading } = useGrantFlow();
+  const [grants, setGrants] = useState([]);
+  const [dataLoaded, setDataLoaded] = useState(false);
   const [query, setQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
 
-  const filtered = mockGrants.filter((g) => {
+  useEffect(() => {
+    async function loadData() {
+      const available = await loadAvailableGrants();
+      if (available) setGrants(available);
+      setDataLoaded(true);
+    }
+    loadData();
+    const interval = setInterval(loadData, 30000);
+    return () => clearInterval(interval);
+  }, [account]);
+
+  const filtered = grants.filter((g) => {
     const matchCat = activeCategory === "All" || g.category === activeCategory;
     const matchQ =
       !query ||
-      g.title.toLowerCase().includes(query.toLowerCase()) ||
-      g.funder.toLowerCase().includes(query.toLowerCase());
+      (g.title || "").toLowerCase().includes(query.toLowerCase()) ||
+      (g.funder || "").toLowerCase().includes(query.toLowerCase());
     return matchCat && matchQ;
   });
+
+  if (loading && !dataLoaded) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 py-16 flex flex-col items-center gap-3">
+        <Loader2 size={32} className="animate-spin text-blue-500" />
+        <p className="text-slate-500">Loading grants...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -76,11 +101,11 @@ export default function BrowseGrantsPage() {
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {filtered.map((grant) => (
-          <GrantCard key={grant.id} grant={grant} context="recipient" />
+          <GrantCard key={grant.grantId} grant={grant} context="recipient" />
         ))}
       </div>
 
-      {filtered.length === 0 && (
+      {filtered.length === 0 && dataLoaded && (
         <div className="text-center py-20 text-slate-500">
           <p className="font-medium">No grants match your search.</p>
           <p className="text-sm">Try adjusting your filters.</p>

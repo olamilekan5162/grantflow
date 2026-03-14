@@ -1,30 +1,134 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { mockGrants } from "@/lib/mockData";
+import { useApp } from "@/context/AppContext";
+import { submitMilestoneProof } from "@/utils/submissionHelpers";
+import { getGrantDetails, getMyApplications } from "@/utils/recipientHelpers";
+import { uploadFile } from "@/lib/utils";
 import FileUpload from "@/components/FileUpload";
-import { ArrowLeft, Info, CheckCircle } from "lucide-react";
+import { ArrowLeft, Info, CheckCircle, Loader2 } from "lucide-react";
 
 export default function SubmitMilestoneProofPage() {
   const { id, milestoneId } = useParams();
   const router = useRouter();
-  const grant = mockGrants.find((g) => g.id === id) || mockGrants[0];
-  const ms =
-    grant.milestones.find((m) => m.id === milestoneId) || grant.milestones[0];
+  const { account } = useApp();
+
+  const [grant, setGrant] = useState(null);
+  const [application, setApplication] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   const [notes, setNotes] = useState("");
   const [workDesc, setWorkDesc] = useState("");
+  const [files, setFiles] = useState([]);
   const [confirmed, setConfirmed] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
-  const handleSubmit = () => {
-    setSubmitted(true);
-    setTimeout(() => router.push("/recipient/dashboard"), 2000);
+  useEffect(() => {
+    async function loadData() {
+      if (!account) {
+        setLoading(false);
+        return;
+      }
+      setLoading(true);
+      try {
+        const [grantData, myApps] = await Promise.all([
+          getGrantDetails(id),
+          getMyApplications(account),
+        ]);
+
+        if (grantData) setGrant(grantData);
+
+        // Find the specific application for this grant
+        const app = myApps.find((a) => a.grantId === id);
+        if (app) setApplication(app);
+      } catch (err) {
+        console.error("Failed to load milestone data:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadData();
+  }, [id, account]);
+
+  const handleSubmit = async () => {
+    if (!application) return;
+    setSubmitting(true);
+    setSubmitError("");
+    try {
+      let uploadedDocs = [];
+      let uploadedImages = [];
+      if (files.length > 0) {
+        for (const file of files) {
+          try {
+            const cid = await uploadFile(file);
+            const isImage = file.type.startsWith("image/");
+            if (isImage) {
+              uploadedImages.push({ name: file.name, cid });
+            } else {
+              uploadedDocs.push({ name: file.name, cid });
+            }
+          } catch (e) {
+            console.error("Failed to upload file", file.name, e);
+          }
+        }
+      }
+
+      await submitMilestoneProof(
+        account,
+        id,
+        application.proposalId,
+        Number(milestoneId),
+        {
+          workDesc,
+          notes,
+          images: uploadedImages,
+          documents: uploadedDocs,
+          timestamp: Date.now(),
+        },
+      );
+      setSubmitted(true);
+      setTimeout(() => router.push("/recipient/dashboard"), 2000);
+    } catch (err) {
+      console.error("Proof submission failed:", err);
+      setSubmitError(
+        err.message || "Failed to submit proof. Please try again.",
+      );
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const inputCls =
     "w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all";
+
+  if (loading) {
+    return (
+      <div className="max-w-2xl mx-auto px-4 py-16 flex flex-col items-center gap-3">
+        <Loader2 size={32} className="animate-spin text-blue-500" />
+        <p className="text-slate-500">Loading milestone details...</p>
+      </div>
+    );
+  }
+
+  if (!grant || !application) {
+    return (
+      <div className="max-w-2xl mx-auto px-4 py-16 text-center">
+        <p className="text-slate-500">Milestone or Application not found.</p>
+        <button
+          onClick={() => router.back()}
+          className="text-blue-600 text-sm mt-2 hover:underline"
+        >
+          ← Go back
+        </button>
+      </div>
+    );
+  }
+
+  const msIndex = Number(milestoneId);
+  const ms = grant.milestones[msIndex] || {};
 
   return (
     <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -46,14 +150,18 @@ export default function SubmitMilestoneProofPage() {
       <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm mb-6">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="font-semibold text-slate-900">{ms.name}</h3>
+            <h3 className="font-semibold text-slate-900">
+              {ms.name || `Milestone ${msIndex + 1}`}
+            </h3>
             <p className="text-sm text-slate-500 mt-0.5">{ms.description}</p>
           </div>
           <div className="text-right">
             <span className="text-2xl font-bold text-emerald-600">
-              ${ms.amount?.toLocaleString()}
+              ${(ms.amount || 0).toLocaleString()}
             </span>
-            <p className="text-xs text-slate-400">{ms.percentage}% of budget</p>
+            <p className="text-xs text-slate-400">
+              {ms.percentage || 0}% of budget
+            </p>
           </div>
         </div>
       </div>
@@ -91,6 +199,7 @@ export default function SubmitMilestoneProofPage() {
               label="Upload photos, videos, or documents"
               multiple
               accept="image/*,video/*,.pdf"
+              onFiles={setFiles}
             />
           </div>
 
@@ -110,11 +219,17 @@ export default function SubmitMilestoneProofPage() {
           <div className="flex items-start gap-3 bg-blue-50 border border-blue-200 rounded-xl p-4">
             <Info size={16} className="text-blue-500 shrink-0 mt-0.5" />
             <p className="text-sm text-blue-700">
-              {ms.verificationNeeded
+              {ms.verificationType === "approver"
                 ? `This milestone requires verification by ${ms.verifier ? "an assigned verifier" : "a verifier"}. Funds will be released after approval.`
                 : "This milestone is self-verified. Funds will be released after you submit this proof."}
             </p>
           </div>
+
+          {submitError && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+              <p className="text-sm text-red-700">{submitError}</p>
+            </div>
+          )}
 
           {/* Confirmation */}
           <label className="flex items-start gap-3 cursor-pointer">
@@ -132,14 +247,20 @@ export default function SubmitMilestoneProofPage() {
 
           <button
             onClick={handleSubmit}
-            disabled={!confirmed || !workDesc.trim()}
-            className={`w-full py-3.5 rounded-xl text-base font-semibold transition-colors ${
+            disabled={!confirmed || !workDesc.trim() || submitting}
+            className={`w-full flex items-center justify-center gap-2 py-3.5 rounded-xl text-base font-semibold transition-colors disabled:opacity-60 ${
               confirmed && workDesc.trim()
                 ? "bg-slate-900 text-white hover:bg-slate-800"
                 : "bg-slate-200 text-slate-400 cursor-not-allowed"
             }`}
           >
-            Submit Proof
+            {submitting ? (
+              <>
+                <Loader2 size={18} className="animate-spin" /> Submitting...
+              </>
+            ) : (
+              "Submit Proof"
+            )}
           </button>
         </div>
       )}
