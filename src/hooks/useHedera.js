@@ -55,7 +55,19 @@ const useHedera = () => {
       console.log("error", e);
     }
   };
-  return { createTopic, submitMessage };
+
+  const getAllMessages = async (topicId) => {
+    try {
+      const response = await fetch(
+        `https://testnet.mirrornode.hedera.com/api/v1/topics/${topicId}/messages?limit=100`,
+      );
+      const data = await response.json();
+      return data.messages.map((m) => JSON.parse(m.message));
+    } catch (e) {
+      console.log("error", e);
+    }
+  };
+  return { createTopic, submitMessage, getAllMessages };
 };
 
 export default useHedera;

@@ -45,6 +45,7 @@ export function AppProvider({ children }) {
         }
 
         const accountMemo = data.memo || null;
+        console.log("Account memo:", accountMemo);
         setMemo(accountMemo);
 
         return {
