@@ -28,7 +28,7 @@ export default function CreateGrantPage() {
     description: "",
     category: "",
     budget: "",
-    currency: "USDC",
+    currency: "HBAR",
     deadline: "",
   });
   // Step 2 state
@@ -235,7 +235,7 @@ export default function CreateGrantPage() {
             <div>
               <label className={labelCls}>Currency</label>
               <div className="flex gap-3 mt-2">
-                {["HBAR", "USDC", "USD"].map((c) => (
+                {["HBAR", "USD"].map((c) => (
                   <label
                     key={c}
                     className="flex items-center gap-1.5 cursor-pointer"
@@ -344,23 +344,7 @@ export default function CreateGrantPage() {
                   </label>
                 </div>
               </div>
-              {ms.verificationType === "approver" && (
-                <div>
-                  <label className={labelCls}>Assign Verifier</label>
-                  <select
-                    className={inputCls}
-                    value={ms.verifier}
-                    onChange={setMilestone(i, "verifier")}
-                  >
-                    <option value="">Select verifier...</option>
-                    {mockVerifiers.map((v) => (
-                      <option key={v.id} value={v.id}>
-                        {v.name} – {v.expertise}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
+
               <div>
                 <label className={labelCls}>Description</label>
                 <textarea

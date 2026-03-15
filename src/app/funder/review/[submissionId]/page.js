@@ -10,7 +10,6 @@ import {
 } from "@/utils/submissionHelpers";
 import { getData } from "@/lib/utils";
 import { ArrowLeft, CheckCircle, Plus, X, Loader2 } from "lucide-react";
-import { MessagesSquare } from "lucide-react";
 
 const DEFAULT_CHECKLIST = [
   { label: "Location/details match grant requirements", checked: false },
