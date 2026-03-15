@@ -5,7 +5,14 @@
  */
 
 import { getConnector } from "@/lib/walletConnect";
-import { AccountId, TopicMessageSubmitTransaction } from "@hiero-ledger/sdk";
+import {
+  AccountId,
+  TopicMessageSubmitTransaction,
+  ContractExecuteTransaction,
+  ContractFunctionParameters,
+  Hbar,
+  HbarUnit,
+} from "@hiero-ledger/sdk";
 import { uploadData } from "@/lib/utils";
 import { invalidateCache } from "./grantFlowHelpers";
 
@@ -44,6 +51,37 @@ function makeId(prefix) {
 
 export async function submitGrant(accountId, grantData) {
   const grantId = makeId("grant");
+
+  const contractId = process.env.NEXT_PUBLIC_ESCROW_CONTRACT_ID;
+  const totalBudgetHbar = grantData.totalBudget || grantData.budget || 0;
+
+  if (contractId && totalBudgetHbar > 0) {
+    const connector = getConnector();
+    if (!connector) throw new Error("Connector not initialized");
+    const signer = connector.getSigner(AccountId.fromString(accountId));
+
+    try {
+      const escrowTx = await new ContractExecuteTransaction()
+        .setContractId(contractId)
+        .setGas(500000)
+        .setFunction(
+          "deposit",
+          new ContractFunctionParameters().addString(grantId),
+        )
+        .setPayableAmount(new Hbar(totalBudgetHbar, HbarUnit.Hbar))
+        .executeWithSigner(signer);
+
+      console.log(
+        "[GrantFlow] Escrow Deposit TX:",
+        escrowTx.transactionId?.toString(),
+      );
+    } catch (err) {
+      console.error("[GrantFlow] Failed to deposit to escrow:", err);
+      throw new Error(
+        "Failed to lock funds in Escrow Contract. Do you have enough HBAR?",
+      );
+    }
+  }
 
   // Upload full grant data to IPFS
   const ipfsHash = await uploadData({
@@ -147,7 +185,47 @@ export async function approveMilestone(
   grantId,
   proposalId,
   milestoneIndex,
+  recipientAddress,
+  amountInHbar,
 ) {
+  const contractId = process.env.NEXT_PUBLIC_ESCROW_CONTRACT_ID;
+
+  if (contractId && recipientAddress && amountInHbar > 0) {
+    const connector = getConnector();
+    if (!connector) throw new Error("Connector not initialized");
+    const signer = connector.getSigner(AccountId.fromString(accountId));
+
+    try {
+      // Convert Hedera account ID (e.g. 0.0.12345) to Solidity Address format
+      const recipientSolidityAddress =
+        AccountId.fromString(recipientAddress).toSolidityAddress();
+
+      const escrowTx = await new ContractExecuteTransaction()
+        .setContractId(contractId)
+        .setGas(500000)
+        .setFunction(
+          "release",
+          new ContractFunctionParameters()
+            .addString(grantId)
+            .addAddress(recipientSolidityAddress)
+            .addUint256(
+              new Hbar(amountInHbar, HbarUnit.Hbar).toTinybars().toString(),
+            ),
+        )
+        .executeWithSigner(signer);
+
+      console.log(
+        "[GrantFlow] Escrow Release TX:",
+        escrowTx.transactionId?.toString(),
+      );
+    } catch (err) {
+      console.error("[GrantFlow] Escrow Release Failed:", err);
+      throw new Error(
+        `Failed to disburse milestone funds from Escrow: ${err.message}`,
+      );
+    }
+  }
+
   await submitToTopic(accountId, {
     type: "MILESTONE_APPROVED",
     grantId,

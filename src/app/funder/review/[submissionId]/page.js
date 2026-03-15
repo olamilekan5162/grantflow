@@ -45,9 +45,7 @@ export default function ReviewMilestonePage() {
     parts.slice(0, -1).join("_"),
     parts[parts.length - 1],
   ];
-  console.log(proposalId, msIndexStr);
   const milestoneIndex = Number(msIndexStr);
-  console.log(milestoneIndex);
 
   useEffect(() => {
     async function loadData() {
@@ -66,8 +64,6 @@ export default function ReviewMilestonePage() {
             m.proposalId === proposalId &&
             m.milestoneIndex === milestoneIndex,
         );
-
-        console.log("sub message", subMsg);
 
         if (!subMsg) {
           setLoading(false);
@@ -93,6 +89,7 @@ export default function ReviewMilestonePage() {
           proposalId,
           grantId,
           milestoneIndex,
+          recipientId: propMsg?.recipient,
           recipientName: propMsg?.recipient || "Unknown Recipient",
           grantTitle: grantData.title || `Grant ${grantId}`,
           milestoneName: ms.name || `Milestone ${milestoneIndex + 1}`,
@@ -138,6 +135,8 @@ export default function ReviewMilestonePage() {
           submission.grantId,
           proposalId,
           milestoneIndex,
+          submission.recipientId,
+          submission.amount,
         );
       } else if (decision === "revisions") {
         await requestMilestoneRevision(
