@@ -153,6 +153,11 @@ export default function GrantDetailsApplyPage() {
               <span className="bg-blue-100 text-blue-700 text-xs font-medium px-2.5 py-1 rounded-full">
                 {grant.category || "Grant"}
               </span>
+              {grant.status === "completed" && (
+                <span className="bg-emerald-100 text-emerald-700 text-xs font-bold px-2.5 py-1 rounded-full border border-emerald-200 uppercase tracking-wide">
+                  Completed
+                </span>
+              )}
               <span className="text-xs text-slate-400">
                 {grant.currency || ""}
               </span>
@@ -222,18 +227,25 @@ export default function GrantDetailsApplyPage() {
           {!hasApplied && !applying && !submitted && (
             <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm mb-6 text-center">
               <h3 className="font-semibold text-slate-900 mb-2">
-                Ready to apply?
+                {grant.status === "completed"
+                  ? "Grant Completed"
+                  : "Ready to apply?"}
               </h3>
               <p className="text-sm text-slate-500 mb-4">
-                Make sure you meet all the requirements before submitting your
-                proposal.
+                {grant.status === "completed"
+                  ? "This grant has successfully reached its recipient limit and all milestones have been completed."
+                  : "Make sure you meet all the requirements before submitting your proposal."}
               </p>
               <button
                 onClick={() => setApplying(true)}
-                disabled={!account}
+                disabled={!account || grant.status === "completed"}
                 className="w-full bg-slate-900 text-white px-6 py-3.5 rounded-xl text-base font-semibold hover:bg-slate-800 transition-colors disabled:opacity-60"
               >
-                {account ? "Start Application" : "Connect wallet to apply"}
+                {!account
+                  ? "Connect wallet to apply"
+                  : grant.status === "completed"
+                    ? "Grant Completed"
+                    : "Start Application"}
               </button>
             </div>
           )}
@@ -286,7 +298,7 @@ export default function GrantDetailsApplyPage() {
                     }`}
                   >
                     {isApproved
-                      ? "Your funding request was successful. You can now begin work on your first milestone."
+                      ? "Your funding request was successful. You can now begin work on your next milestone."
                       : isRejected
                         ? "Unfortunately, your application was not selected for this grant."
                         : "The funder is currently reviewing your proposal. You will be notified when a decision is made."}

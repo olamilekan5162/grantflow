@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useApp } from "@/context/AppContext";
-import { mockGrants } from "@/lib/mockData";
+import { useGrantFlow } from "@/hooks/useGrantFlow";
 import {
   ArrowRight,
   CheckCircle,
@@ -13,6 +13,7 @@ import {
   TrendingUp,
   Clock,
   Users,
+  Loader2,
 } from "lucide-react";
 
 const STATS = [
@@ -49,13 +50,21 @@ const TRUSTED_ORGS = [
   "Humanities Texas",
 ];
 
-const FEATURED_GRANT_IDS = ["g1", "g2", "g3"];
-
 export default function LandingPage() {
   const { setShowWalletModal, isConnected } = useApp();
-  const featuredGrants = mockGrants.filter((g) =>
-    FEATURED_GRANT_IDS.includes(g.id),
-  );
+  const { loadAllGrants, loading } = useGrantFlow();
+  const [grants, setGrants] = useState([]);
+
+  useEffect(() => {
+    async function fetchGrants() {
+      const all = await loadAllGrants();
+      if (all) {
+        // Only show 3 most recent
+        setGrants(all.slice(0, 3));
+      }
+    }
+    fetchGrants();
+  }, [loadAllGrants]);
 
   return (
     <div>
@@ -63,7 +72,7 @@ export default function LandingPage() {
       <section className="bg-slate-900 text-white py-24 px-4">
         <div className="max-w-4xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 bg-blue-500/20 text-blue-300 text-sm font-medium px-4 py-2 rounded-full mb-8 border border-blue-500/30">
-            <Zap size={14} /> Now live on Hedera Mainnet
+            <Zap size={14} /> Now live on Hedera Testnet
           </div>
           <h1 className="text-5xl sm:text-6xl font-bold tracking-tight leading-tight mb-6">
             Transparent Funding
@@ -81,14 +90,6 @@ export default function LandingPage() {
             >
               Explore Grants <ArrowRight size={18} />
             </Link>
-            {!isConnected && (
-              <button
-                onClick={() => setShowWalletModal(true)}
-                className="border border-white/30 bg-white/10 text-white px-8 py-4 rounded-xl text-base font-semibold hover:bg-white/20 transition-colors"
-              >
-                Connect Wallet
-              </button>
-            )}
           </div>
           {/* Stats */}
           <div className="mt-20 grid grid-cols-2 sm:grid-cols-4 gap-8">
@@ -156,11 +157,29 @@ export default function LandingPage() {
               View all <ArrowRight size={14} />
             </Link>
           </div>
-          <div className="grid md:grid-cols-3 gap-6">
-            {featuredGrants.map((grant) => (
-              <FeaturedGrantCard key={grant.id} grant={grant} />
-            ))}
-          </div>
+
+          {loading && grants.length === 0 ? (
+            <div className="flex flex-col items-center py-20 gap-3">
+              <Loader2 className="animate-spin text-blue-500" size={32} />
+              <p className="text-slate-500">Loading grants from Hedera...</p>
+            </div>
+          ) : grants.length === 0 ? (
+            <div className="text-center py-20 bg-slate-50 rounded-2xl border border-dashed border-slate-300">
+              <p className="text-slate-500">No active grants found on-chain.</p>
+              <Link
+                href="/funder/grants/create"
+                className="text-blue-600 text-sm font-medium hover:underline mt-2 inline-block"
+              >
+                Create the first one →
+              </Link>
+            </div>
+          ) : (
+            <div className="grid md:grid-cols-3 gap-6">
+              {grants.map((grant) => (
+                <FeaturedGrantCard key={grant.grantId} grant={grant} />
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
@@ -213,24 +232,24 @@ export default function LandingPage() {
 }
 
 function FeaturedGrantCard({ grant }) {
-  const disbursedPct =
-    grant.totalBudget > 0
-      ? Math.round((grant.disbursed / grant.totalBudget) * 100)
-      : 0;
+  const budget = grant.totalBudget || grant.budget || 0;
+  const disbursed = grant.disbursed || 0;
+  const disbursedPct = budget > 0 ? Math.round((disbursed / budget) * 100) : 0;
+
   return (
     <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow flex flex-col">
       <div className="flex items-center justify-between mb-3">
         <span className="bg-blue-100 text-blue-700 text-xs font-medium px-2.5 py-1 rounded-full">
-          {grant.category}
+          {grant.category || "General"}
         </span>
-        <span className="text-xs text-slate-400">{grant.currency}</span>
+        <span className="text-xs text-slate-400">{grant.currency || "HBAR"}</span>
       </div>
-      <h3 className="font-bold text-slate-900 mb-1">{grant.title}</h3>
-      <p className="text-sm text-slate-500 mb-3">{grant.funder}</p>
+      <h3 className="font-bold text-slate-900 mb-1 leading-tight">{grant.title}</h3>
+      <p className="text-xs text-slate-500 mb-4 font-mono truncate">{grant.funder}</p>
       <div className="flex justify-between text-sm mb-2">
         <span className="text-slate-500">Budget</span>
         <span className="font-semibold text-slate-900">
-          ${grant.totalBudget.toLocaleString()}
+          ${budget.toLocaleString()}
         </span>
       </div>
       {disbursedPct > 0 && (
@@ -250,15 +269,17 @@ function FeaturedGrantCard({ grant }) {
         <Clock size={12} />
         <span>
           Deadline:{" "}
-          {new Date(grant.applicationDeadline).toLocaleDateString("en-US", {
-            month: "long",
-            day: "numeric",
-            year: "numeric",
-          })}
+          {grant.deadline
+            ? new Date(grant.deadline).toLocaleDateString("en-US", {
+                month: "short",
+                day: "numeric",
+                year: "numeric",
+              })
+            : "No deadline"}
         </span>
       </div>
       <Link
-        href={`/explore/grants/${grant.id}`}
+        href={`/explore/grants/${grant.grantId}`}
         className="mt-auto block text-center bg-slate-900 text-white px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-slate-800 transition-colors"
       >
         View Grant

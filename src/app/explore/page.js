@@ -149,11 +149,16 @@ export default function ExploreGrantsPage() {
               className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow flex flex-col"
             >
               <div className="flex items-center justify-between mb-3">
-                <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700">
-                  Active
+                <span
+                  className={`text-xs font-medium px-2.5 py-1 rounded-full ${
+                    STATUS_CONFIG[grant.status]?.color ||
+                    STATUS_CONFIG.active.color
+                  }`}
+                >
+                  {STATUS_CONFIG[grant.status]?.label || "Active"}
                 </span>
                 <span className="text-xs text-slate-400">
-                  {grant.currency || ""}
+                  {grant.currency || "HBAR"}
                 </span>
               </div>
               <h3 className="font-bold text-slate-900 mb-1">{grant.title}</h3>

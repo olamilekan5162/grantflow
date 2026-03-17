@@ -63,8 +63,8 @@ export default function FunderDashboard() {
       (sum, g) => sum + (g.totalBudget || g.budget || 0),
       0,
     ),
-    totalDisbursed: 0, // Would need milestone approval tracking
-    activeGrants: grants.length,
+    totalDisbursed: grants.reduce((sum, g) => sum + (g.disbursed || 0), 0),
+    activeGrants: grants.filter((g) => g.status !== "completed").length,
     activeRecipients: grants.reduce(
       (sum, g) => sum + (g.approvedCount || 0),
       0,
@@ -199,8 +199,14 @@ export default function FunderDashboard() {
                           {grant.applicationCount !== 1 ? "s" : ""}
                         </p>
                       </div>
-                      <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700">
-                        Active
+                      <span
+                        className={`text-xs font-medium px-2.5 py-1 rounded-full ${
+                          grant.status === "completed"
+                            ? "bg-slate-100 text-slate-600"
+                            : "bg-emerald-100 text-emerald-700"
+                        }`}
+                      >
+                        {grant.status === "completed" ? "Completed" : "Active"}
                       </span>
                     </div>
                     <div className="flex items-center gap-4 text-xs text-slate-500 mb-3">
@@ -278,7 +284,7 @@ export default function FunderDashboard() {
               <h2 className="text-lg font-bold text-slate-900 mb-4">
                 Past Reviews
               </h2>
-              <div className="space-y-3">
+              <div className="space-y-3 max-h-[300px] overflow-y-auto">
                 {pastReviews.map((item, i) => (
                   <div
                     key={i}
@@ -296,7 +302,7 @@ export default function FunderDashboard() {
                       </div>
                       <span
                         className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${
-                          item.status === "approved"
+                          item.status === "completed"
                             ? "bg-emerald-100 text-emerald-700"
                             : item.status === "revision_requested"
                               ? "bg-amber-100 text-amber-700"

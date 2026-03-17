@@ -120,7 +120,19 @@ export async function getPendingMilestoneReviews(funderWallet) {
       (m) => m.type === "MILESTONE_SUBMITTED" && m.grantId === grantId,
     );
 
+    // Group by proposalId + milestoneIndex to only get the LATEST submission
+    const latestSubmissionsMap = new Map();
     for (const sub of submissions) {
+      const key = `${sub.proposalId}_${sub.milestoneIndex}`;
+      const existing = latestSubmissionsMap.get(key);
+      if (!existing || sub.timestamp > existing.timestamp) {
+        latestSubmissionsMap.set(key, sub);
+      }
+    }
+
+    const latestSubmissions = Array.from(latestSubmissionsMap.values());
+
+    for (const sub of latestSubmissions) {
       const status = getMilestoneStatus(
         messages,
         sub.proposalId,
@@ -191,12 +203,23 @@ export async function getPastMilestoneReviews(funderWallet) {
   const pastReviews = [];
 
   for (const grantId of myGrantIds) {
-    // All milestone submissions for this grant
     const submissions = messages.filter(
       (m) => m.type === "MILESTONE_SUBMITTED" && m.grantId === grantId,
     );
 
+    // Group by proposalId + milestoneIndex to only get the LATEST submission
+    const latestSubmissionsMap = new Map();
     for (const sub of submissions) {
+      const key = `${sub.proposalId}_${sub.milestoneIndex}`;
+      const existing = latestSubmissionsMap.get(key);
+      if (!existing || sub.timestamp > existing.timestamp) {
+        latestSubmissionsMap.set(key, sub);
+      }
+    }
+
+    const latestSubmissions = Array.from(latestSubmissionsMap.values());
+
+    for (const sub of latestSubmissions) {
       const status = getMilestoneStatus(
         messages,
         sub.proposalId,

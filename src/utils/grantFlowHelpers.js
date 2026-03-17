@@ -144,16 +144,13 @@ export function getProposalStatus(messages, proposalId) {
  * @returns {"locked" | "available" | "pending_review" | "revision_requested" | "completed"}
  */
 export function getMilestoneStatus(messages, proposalId, milestoneIndex) {
-  // Check if submitted
-  const submission = messages.find(
-    (m) =>
-      m.type === "MILESTONE_SUBMITTED" &&
-      m.proposalId === proposalId &&
-      m.milestoneIndex === milestoneIndex,
-  );
+  // Get all messages related to this specific milestone, newest first
+  const milestoneMsgs = messages
+    .filter((m) => m.proposalId === proposalId && m.milestoneIndex === milestoneIndex)
+    .sort((a, b) => b.timestamp - a.timestamp);
 
-  if (!submission) {
-    // First milestone is always available once proposal approved
+  // If no submissions exist for this milestone yet
+  if (milestoneMsgs.length === 0) {
     if (milestoneIndex === 0) {
       const proposalApproved = messages.find(
         (m) => m.type === "PROPOSAL_APPROVED" && m.proposalId === proposalId,
@@ -161,7 +158,6 @@ export function getMilestoneStatus(messages, proposalId, milestoneIndex) {
       return proposalApproved ? "available" : "locked";
     }
 
-    // Others need previous milestone approved
     const prevApproval = messages.find(
       (m) =>
         m.type === "MILESTONE_APPROVED" &&
@@ -171,24 +167,12 @@ export function getMilestoneStatus(messages, proposalId, milestoneIndex) {
     return prevApproval ? "available" : "locked";
   }
 
-  // Check if approved
-  const approval = messages.find(
-    (m) =>
-      m.type === "MILESTONE_APPROVED" &&
-      m.proposalId === proposalId &&
-      m.milestoneIndex === milestoneIndex,
-  );
-  if (approval) return "completed";
-
-  // Check if revision requested
-  const revision = messages.find(
-    (m) =>
-      m.type === "MILESTONE_REVISION_REQUESTED" &&
-      m.proposalId === proposalId &&
-      m.milestoneIndex === milestoneIndex,
-  );
-  if (revision) return "revision_requested";
-
+  // Look at the single most recent message for this milestone to determine current active state
+  const latestMsg = milestoneMsgs[0];
+  
+  if (latestMsg.type === "MILESTONE_APPROVED") return "completed";
+  if (latestMsg.type === "MILESTONE_REVISION_REQUESTED") return "revision_requested";
+  // If the latest message is a submission, it is pending review by the funder
   return "pending_review";
 }
 
@@ -207,6 +191,40 @@ export function buildGrantSummary(grantMsg, grantData, allMessages) {
     (p) => getProposalStatus(allMessages, p.proposalId) === "approved",
   );
 
+  // Calculate total disbursed HBAR
+  const approvedMilestones = allMessages.filter(
+    (m) => m.type === "MILESTONE_APPROVED" && m.grantId === grantId,
+  );
+
+  const disbursed = approvedMilestones.reduce((sum, m) => {
+    // We need to find the milestone amount from the grant data if not in the message
+    const msIndex = m.milestoneIndex;
+    const msAmount = grantData.milestones?.[msIndex]?.amount || 0;
+    return sum + msAmount;
+  }, 0);
+
+  // Determine if grant is completed
+  // Logic: All approved recipients must have completed all their milestones
+  let status = "active";
+  const numMilestones = grantData.milestones?.length || 0;
+  const maxRecipients = grantData.maxRecipients || 0;
+
+  if (maxRecipients > 0 && approvedProposals.length >= maxRecipients) {
+    // Check if EVERY approved proposal has ALL milestones completed
+    const allFinished = approvedProposals.every((p) => {
+      for (let i = 0; i < numMilestones; i++) {
+        if (getMilestoneStatus(allMessages, p.proposalId, i) !== "completed") {
+          return false;
+        }
+      }
+      return true;
+    });
+
+    if (allFinished && numMilestones > 0) {
+      status = "completed";
+    }
+  }
+
   return {
     ...grantData,
     grantId,
@@ -214,5 +232,7 @@ export function buildGrantSummary(grantMsg, grantData, allMessages) {
     createdAt: grantMsg.timestamp,
     applicationCount: proposals.length,
     approvedCount: approvedProposals.length,
+    disbursed,
+    status: grantData.status === "completed" ? "completed" : status,
   };
 }
