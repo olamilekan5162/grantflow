@@ -10,6 +10,7 @@ import {
 } from "@/utils/submissionHelpers";
 import { getData } from "@/lib/utils";
 import { ArrowLeft, CheckCircle, Plus, X, Loader2 } from "lucide-react";
+import { RefreshCcw } from "lucide-react";
 
 const DEFAULT_CHECKLIST = [
   { label: "Location/details match grant requirements", checked: false },
@@ -156,7 +157,7 @@ export default function ReviewMilestonePage() {
       }
 
       setDecisionMade(decision);
-      setTimeout(() => router.push("/funder/dashboard"), 2000);
+      setTimeout(() => router.push("/funder/dashboard"), 5000);
     } catch (err) {
       console.error(`${decision} failed:`, err);
       setError(err.message || "Action failed.");
@@ -426,7 +427,7 @@ export default function ReviewMilestonePage() {
             disabled={submitting}
             className="flex items-center justify-center gap-2 bg-emerald-500 text-white px-5 py-3.5 rounded-xl font-semibold hover:bg-emerald-600 transition-colors disabled:opacity-60"
           >
-            {submitting && decisionMade === "approved" ? (
+            {submitting ? (
               <Loader2 size={16} className="animate-spin" />
             ) : (
               <CheckCircle size={18} />
@@ -444,10 +445,10 @@ export default function ReviewMilestonePage() {
             disabled={submitting}
             className="flex items-center justify-center gap-2 bg-amber-500 text-white px-5 py-3.5 rounded-xl font-semibold hover:bg-amber-600 transition-colors disabled:opacity-60"
           >
-            {submitting && decisionMade === "revisions" ? (
+            {submitting ? (
               <Loader2 size={16} className="animate-spin" />
             ) : (
-              "🔄"
+              <RefreshCcw size={18} />
             )}{" "}
             Request Revisions
           </button>
@@ -456,10 +457,10 @@ export default function ReviewMilestonePage() {
             disabled={submitting}
             className="flex items-center justify-center gap-2 bg-red-500 text-white px-5 py-3.5 rounded-xl font-semibold hover:bg-red-600 transition-colors disabled:opacity-60"
           >
-            {submitting && decisionMade === "rejected" ? (
+            {submitting ? (
               <Loader2 size={16} className="animate-spin" />
             ) : (
-              "✕"
+              <X size={18} />
             )}{" "}
             Reject
           </button>

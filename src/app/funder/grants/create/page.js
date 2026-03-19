@@ -359,7 +359,8 @@ export default function CreateGrantPage() {
 
           <button
             onClick={addMilestone}
-            className="w-full border-2 border-dashed border-slate-300 text-slate-500 rounded-xl py-3 text-sm font-medium hover:border-blue-400 hover:text-blue-500 transition-colors flex items-center justify-center gap-2"
+            disabled={totalPct === 100}
+            className="w-full border-2 border-dashed border-slate-300 text-slate-500 rounded-xl py-3 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:border-blue-400 hover:text-blue-500 transition-colors flex items-center justify-center gap-2"
           >
             <Plus size={16} /> Add Milestone
           </button>
@@ -534,7 +535,7 @@ export default function CreateGrantPage() {
           </div>
           <div className="bg-blue-50 border border-blue-200 rounded-xl p-5">
             <h3 className="font-semibold text-blue-900 mb-2">
-              🔒 Smart Contract Escrow
+              Smart Contract Escrow
             </h3>
             <p className="text-sm text-blue-700">
               Funds will be held securely in a smart contract. They're released
@@ -588,7 +589,7 @@ export default function CreateGrantPage() {
                     Submitting to Hedera...
                   </>
                 ) : (
-                  "💸 Deposit & Launch Grant"
+                  "Deposit & Launch Grant"
                 )}
               </button>
               {!account && (

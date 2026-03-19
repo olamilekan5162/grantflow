@@ -444,9 +444,7 @@ export default function GrantDetailsApplyPage() {
             <div className="space-y-3 text-sm">
               <div className="flex justify-between">
                 <span className="text-slate-500">Total Budget</span>
-                <span className="font-semibold">
-                  ${budget.toLocaleString()}
-                </span>
+                <span className="font-semibold">{budget.toLocaleString()}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-500">Currency</span>

@@ -140,7 +140,7 @@ export default function RecipientDashboard() {
                       </h3>
                       <p className="text-sm text-slate-500 mt-0.5">
                         {app.grantBudget
-                          ? `$${Number(app.grantBudget).toLocaleString()}`
+                          ? `${Number(app.grantBudget).toLocaleString()} HBAR`
                           : "—"}
                       </p>
                       <div className="mt-3">
@@ -231,7 +231,8 @@ export default function RecipientDashboard() {
                 <div className="flex justify-between text-sm mb-3">
                   <span className="text-slate-500">Budget</span>
                   <span className="font-semibold">
-                    ${(grant.totalBudget || grant.budget || 0).toLocaleString()}
+                    {(grant.totalBudget || grant.budget || 0).toLocaleString()}{" "}
+                    HBAR
                   </span>
                 </div>
                 {grant.deadline && (

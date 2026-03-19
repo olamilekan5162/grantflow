@@ -127,7 +127,7 @@ export default function Navigation() {
                   {walletDropdown && (
                     <div className="absolute right-0 top-full mt-2 w-52 bg-white border border-slate-200 rounded-xl shadow-lg py-1 z-50">
                       {/* Balance */}
-                      <div className="flex items-center gap-2 px-4 py-2.5 text-sm text-slate-500 border-b border-slate-100">
+                      <div className="flex items-center gap-2 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 border-b border-slate-100">
                         <Wallet size={14} />
                         <span>
                           {typeof balance === "number"
@@ -138,11 +138,9 @@ export default function Navigation() {
                       </div>
                       {/* Role badge */}
                       {userRole && (
-                        <div className="px-4 py-2 text-xs text-slate-400 border-b border-slate-100">
-                          Role:{" "}
-                          <span className="font-semibold text-slate-700 capitalize">
-                            {userRole}
-                          </span>
+                        <div className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 text-left">
+                          <User size={14} />
+                          <span className="capitalize">{userRole}</span>
                         </div>
                       )}
                       <Link
@@ -152,22 +150,14 @@ export default function Navigation() {
                       >
                         <LayoutDashboard size={14} /> Dashboard
                       </Link>
-                      <button
-                        onClick={() => {
-                          // TODO Trigger global onboarding via context if needed manually
-                          setWalletDropdown(false);
-                        }}
-                        className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 w-full text-left hidden"
-                      >
-                        <User size={14} /> Edit Profile
-                      </button>
+
                       <hr className="my-1 border-slate-100" />
                       <button
                         onClick={() => {
                           disconnect();
                           setWalletDropdown(false);
                         }}
-                        className="flex items-center gap-2 px-4 py-2 text-sm text-red-500 hover:bg-red-50 w-full text-left"
+                        className="flex items-center gap-2 px-4 py-2 text-sm text-red-500 hover:bg-red-50 w-full text-left cursor-pointer"
                       >
                         <LogOut size={14} /> Disconnect
                       </button>

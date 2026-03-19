@@ -103,7 +103,9 @@ export default function PublicGrantDetailsPage() {
         <div>
           <div className="flex items-center gap-2 mb-2">
             <span
-              className={`text-xs font-medium px-2.5 py-1 rounded-full ${STATUS_COLOR[grant.status] || "bg-blue-100 text-blue-700"}`}
+              className={`text-xs font-medium px-2.5 py-1 rounded-full ${
+                STATUS_COLOR[grant.status] || "bg-blue-100 text-blue-700"
+              }`}
             >
               {grant.status === "accepting_applications" ||
               grant.status === "active"
@@ -137,22 +139,25 @@ export default function PublicGrantDetailsPage() {
         {[
           {
             label: "Total Budget",
-            value: `$${totalBudget.toLocaleString()}`,
-            sub: grant.currency || "USD",
+            value: `${totalBudget.toLocaleString()} HBAR`,
+            sub: grant.currency || "HBAR",
           },
           {
             label: "Disbursed",
-            value: `$${(grant.disbursed || 0).toLocaleString()}`,
+            value: `${(grant.disbursed || 0).toLocaleString()} HBAR`,
             sub: `${disbursedPct}%`,
           },
           {
             label: "Remaining",
-            value: `$${remaining.toLocaleString()}`,
+            value: `${remaining.toLocaleString()} HBAR`,
             sub: "in escrow",
           },
           {
             label: "Recipients",
-            value: `${grant.recipientCount || applications.filter((a) => a.status === "approved").length}/${grant.maxRecipients || "Unlimited"}`,
+            value: `${
+              grant.recipientCount ||
+              applications.filter((a) => a.status === "approved").length
+            }/${grant.maxRecipients || "Unlimited"}`,
             sub: "funded",
           },
         ].map(({ label, value, sub }) => (
@@ -182,8 +187,8 @@ export default function PublicGrantDetailsPage() {
           />
         </div>
         <div className="flex justify-between text-xs text-slate-400">
-          <span>${(grant.disbursed || 0).toLocaleString()} released</span>
-          <span>${remaining.toLocaleString()} remaining</span>
+          <span>{(grant.disbursed || 0).toLocaleString()} HBAR released</span>
+          <span>{remaining.toLocaleString()} HBAR remaining</span>
         </div>
       </div>
 
@@ -211,15 +216,15 @@ export default function PublicGrantDetailsPage() {
                         ms.status === "completed"
                           ? "bg-emerald-100 text-emerald-700"
                           : ms.status === "in_review"
-                            ? "bg-amber-100 text-amber-700"
-                            : "bg-slate-100 text-slate-400"
+                          ? "bg-amber-100 text-amber-700"
+                          : "bg-slate-100 text-slate-400"
                       }`}
                     >
                       {ms.status === "completed"
                         ? "✓"
                         : ms.status === "in_review"
-                          ? "⏳"
-                          : i + 1}
+                        ? "⏳"
+                        : i + 1}
                     </div>
                     <div className="flex-1">
                       <p className="text-sm font-medium text-slate-900">
@@ -232,7 +237,7 @@ export default function PublicGrantDetailsPage() {
                         {ms.percentage || 0}%
                       </p>
                       <p className="text-xs text-slate-400">
-                        ${(ms.amount || 0).toLocaleString()}
+                        {(ms.amount || 0).toLocaleString()} HBAR
                       </p>
                     </div>
                   </div>
@@ -337,7 +342,7 @@ export default function PublicGrantDetailsPage() {
                       <p className="text-xs text-slate-500">
                         Approved{" "}
                         {new Date(
-                          app.submittedAt || Date.now(),
+                          app.submittedAt || Date.now()
                         ).toLocaleDateString()}
                       </p>
                     </div>
@@ -345,7 +350,7 @@ export default function PublicGrantDetailsPage() {
                 </div>
               ))}
             {applications.filter(
-              (a) => a.status === "approved" || a.status === "active",
+              (a) => a.status === "approved" || a.status === "active"
             ).length === 0 && (
               <p className="text-sm text-slate-400 italic">
                 No recipients selected yet.

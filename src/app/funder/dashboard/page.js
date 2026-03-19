@@ -120,8 +120,8 @@ export default function FunderDashboard() {
             label: "Total Committed",
             value:
               stats.totalCommitted > 0
-                ? `$${(stats.totalCommitted / 1000).toFixed(0)}K`
-                : "$0",
+                ? `${stats.totalCommitted.toLocaleString()} HBAR`
+                : "0 HBAR",
             icon: DollarSign,
             color: "text-blue-600 bg-blue-50",
           },
@@ -129,8 +129,8 @@ export default function FunderDashboard() {
             label: "Total Disbursed",
             value:
               stats.totalDisbursed > 0
-                ? `$${(stats.totalDisbursed / 1000).toFixed(0)}K`
-                : "$0",
+                ? `${stats.totalDisbursed.toLocaleString()} HBAR`
+                : "0 HBAR",
             icon: BarChart3,
             color: "text-emerald-600 bg-emerald-50",
           },
@@ -194,7 +194,7 @@ export default function FunderDashboard() {
                           {grant.title}
                         </h3>
                         <p className="text-xs text-slate-500 mt-0.5">
-                          Budget: ${budget.toLocaleString()} ·{" "}
+                          Budget: {budget.toLocaleString()} HBAR ·{" "}
                           {grant.applicationCount || 0} application
                           {grant.applicationCount !== 1 ? "s" : ""}
                         </p>

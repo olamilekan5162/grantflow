@@ -54,7 +54,7 @@ export async function submitGrant(accountId, grantData) {
 
   const contractId = process.env.NEXT_PUBLIC_ESCROW_CONTRACT_ID;
   const totalBudgetHbar = grantData.totalBudget || grantData.budget || 0;
-
+  let txId = null;
   if (contractId && totalBudgetHbar > 0) {
     const connector = getConnector();
     if (!connector) throw new Error("Connector not initialized");
@@ -71,10 +71,8 @@ export async function submitGrant(accountId, grantData) {
         .setPayableAmount(new Hbar(totalBudgetHbar, HbarUnit.Hbar))
         .executeWithSigner(signer);
 
-      console.log(
-        "[GrantFlow] Escrow Deposit TX:",
-        escrowTx.transactionId?.toString(),
-      );
+      txId = escrowTx.transactionId?.toString();
+      console.log("[GrantFlow] Escrow Deposit TX:", txId);
     } catch (err) {
       console.error("[GrantFlow] Failed to deposit to escrow:", err);
       throw new Error(
@@ -97,6 +95,7 @@ export async function submitGrant(accountId, grantData) {
     grantId,
     funder: accountId,
     ipfsHash,
+    txId, // Include escrow tx ID
     timestamp: Date.now(),
   });
 
@@ -189,6 +188,7 @@ export async function approveMilestone(
   amountInHbar,
 ) {
   const contractId = process.env.NEXT_PUBLIC_ESCROW_CONTRACT_ID;
+  let txId = null;
 
   if (contractId && recipientAddress && amountInHbar > 0) {
     const connector = getConnector();
@@ -214,10 +214,8 @@ export async function approveMilestone(
         )
         .executeWithSigner(signer);
 
-      console.log(
-        "[GrantFlow] Escrow Release TX:",
-        escrowTx.transactionId?.toString(),
-      );
+      txId = escrowTx.transactionId?.toString();
+      console.log("[GrantFlow] Escrow Release TX:", txId);
     } catch (err) {
       console.error("[GrantFlow] Escrow Release Failed:", err);
       throw new Error(
@@ -232,6 +230,7 @@ export async function approveMilestone(
     proposalId,
     milestoneIndex,
     approvedBy: accountId,
+    txId, // Include escrow release tx ID
     timestamp: Date.now(),
   });
 }

@@ -55,7 +55,7 @@ export default function ExploreGrantsPage() {
 
   const totalBudget = grants.reduce(
     (s, g) => s + (g.totalBudget || g.budget || 0),
-    0,
+    0
   );
 
   if (loading && !dataLoaded) {
@@ -82,7 +82,7 @@ export default function ExploreGrantsPage() {
             {grants.length} total grants
           </span>
           <span className="bg-emerald-100 px-3 py-1 rounded-full text-emerald-700 font-medium">
-            ${totalBudget.toLocaleString()} committed
+            {totalBudget.toLocaleString()} HBAR committed
           </span>
           <span className="bg-blue-100 px-3 py-1 rounded-full text-blue-700 font-medium">
             {grants.filter((g) => g.applicationCount > 0).length} with
@@ -166,7 +166,7 @@ export default function ExploreGrantsPage() {
               <div className="flex justify-between text-sm mb-2">
                 <span className="text-slate-500">Total Budget</span>
                 <span className="font-semibold">
-                  ${budget.toLocaleString()}
+                  {budget.toLocaleString()} HBAR
                 </span>
               </div>
               <div className="flex items-center gap-4 text-xs text-slate-400 mb-4">
