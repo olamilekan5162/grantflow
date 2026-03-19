@@ -31,7 +31,7 @@ export default function BrowseGrantsPage() {
       setDataLoaded(true);
     }
     loadData();
-    const interval = setInterval(loadData, 30000);
+    const interval = setInterval(loadData, 10000);
     return () => clearInterval(interval);
   }, [account]);
 

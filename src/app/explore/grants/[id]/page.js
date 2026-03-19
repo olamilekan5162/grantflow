@@ -33,7 +33,7 @@ export default function PublicGrantDetailsPage() {
       }
     }
     loadData();
-    const interval = setInterval(loadData, 30000); // 30s auto-refresh
+    const interval = setInterval(loadData, 10000); // 30s auto-refresh
     return () => clearInterval(interval);
   }, [id]);
 
@@ -216,15 +216,15 @@ export default function PublicGrantDetailsPage() {
                         ms.status === "completed"
                           ? "bg-emerald-100 text-emerald-700"
                           : ms.status === "in_review"
-                          ? "bg-amber-100 text-amber-700"
-                          : "bg-slate-100 text-slate-400"
+                            ? "bg-amber-100 text-amber-700"
+                            : "bg-slate-100 text-slate-400"
                       }`}
                     >
                       {ms.status === "completed"
                         ? "✓"
                         : ms.status === "in_review"
-                        ? "⏳"
-                        : i + 1}
+                          ? "⏳"
+                          : i + 1}
                     </div>
                     <div className="flex-1">
                       <p className="text-sm font-medium text-slate-900">
@@ -342,7 +342,7 @@ export default function PublicGrantDetailsPage() {
                       <p className="text-xs text-slate-500">
                         Approved{" "}
                         {new Date(
-                          app.submittedAt || Date.now()
+                          app.submittedAt || Date.now(),
                         ).toLocaleDateString()}
                       </p>
                     </div>
@@ -350,7 +350,7 @@ export default function PublicGrantDetailsPage() {
                 </div>
               ))}
             {applications.filter(
-              (a) => a.status === "approved" || a.status === "active"
+              (a) => a.status === "approved" || a.status === "active",
             ).length === 0 && (
               <p className="text-sm text-slate-400 italic">
                 No recipients selected yet.

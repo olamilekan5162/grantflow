@@ -39,7 +39,7 @@ export default function ExploreGrantsPage() {
       setDataLoaded(true);
     }
     loadData();
-    const interval = setInterval(loadData, 30000);
+    const interval = setInterval(loadData, 10000);
     return () => clearInterval(interval);
   }, []);
 
@@ -55,7 +55,7 @@ export default function ExploreGrantsPage() {
 
   const totalBudget = grants.reduce(
     (s, g) => s + (g.totalBudget || g.budget || 0),
-    0
+    0,
   );
 
   if (loading && !dataLoaded) {

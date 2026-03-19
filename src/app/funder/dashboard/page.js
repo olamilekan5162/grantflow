@@ -53,7 +53,7 @@ export default function FunderDashboard() {
     loadData();
 
     // Refresh every 30 seconds
-    const interval = setInterval(loadData, 30000);
+    const interval = setInterval(loadData, 10000);
     return () => clearInterval(interval);
   }, [account]);
 
