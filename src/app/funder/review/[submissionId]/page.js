@@ -62,7 +62,7 @@ export default function ReviewMilestonePage() {
           (m) =>
             m.type === "MILESTONE_SUBMITTED" &&
             m.proposalId === proposalId &&
-            m.milestoneIndex === milestoneIndex,
+            m.milestoneIndex === milestoneIndex
         );
 
         if (!subMsg) {
@@ -72,13 +72,13 @@ export default function ReviewMilestonePage() {
 
         // Fetch proposal to get recipient and grantId
         const propMsg = messages.find(
-          (m) => m.type === "PROPOSAL_SUBMITTED" && m.proposalId === proposalId,
+          (m) => m.type === "PROPOSAL_SUBMITTED" && m.proposalId === proposalId
         );
         const grantId = propMsg?.grantId || subMsg.grantId;
 
         // Fetch grant to get budget/names
         const grantMsg = messages.find(
-          (m) => m.type === "GRANT_CREATED" && m.grantId === grantId,
+          (m) => m.type === "GRANT_CREATED" && m.grantId === grantId
         );
         const grantData = grantMsg ? await getData(grantMsg.ipfsHash) : {};
 
@@ -111,8 +111,8 @@ export default function ReviewMilestonePage() {
   const toggleCheck = (i) =>
     setChecklist((cl) =>
       cl.map((item, idx) =>
-        idx === i ? { ...item, checked: !item.checked } : item,
-      ),
+        idx === i ? { ...item, checked: !item.checked } : item
+      )
     );
 
   const addItem = () => {
@@ -136,7 +136,7 @@ export default function ReviewMilestonePage() {
           proposalId,
           milestoneIndex,
           submission.recipientId,
-          submission.amount,
+          submission.amount
         );
       } else if (decision === "revisions") {
         await requestMilestoneRevision(
@@ -144,7 +144,7 @@ export default function ReviewMilestonePage() {
           submission.grantId,
           proposalId,
           milestoneIndex,
-          revisionsNote || comments,
+          revisionsNote || comments
         );
       } else if (decision === "rejected") {
         await requestMilestoneRevision(
@@ -152,7 +152,7 @@ export default function ReviewMilestonePage() {
           submission.grantId,
           proposalId,
           milestoneIndex,
-          "Rejected. " + (comments || ""),
+          "Rejected. " + (comments || "")
         );
       }
 
@@ -213,7 +213,7 @@ export default function ReviewMilestonePage() {
         </div>
         <div className="text-right">
           <span className="text-2xl font-bold text-emerald-600">
-            ${(submission.amount || 0).toLocaleString()}
+            {(submission.amount || 0).toLocaleString()} HBAR
           </span>
           <p className="text-xs text-slate-400">to release</p>
         </div>
@@ -231,8 +231,8 @@ export default function ReviewMilestonePage() {
             decisionMade === "approved"
               ? "bg-emerald-50 border-emerald-200 text-emerald-700"
               : decisionMade === "rejected"
-                ? "bg-red-50 border-red-200 text-red-700"
-                : "bg-amber-50 border-amber-200 text-amber-700"
+              ? "bg-red-50 border-red-200 text-red-700"
+              : "bg-amber-50 border-amber-200 text-amber-700"
           }`}
         >
           <div className="flex items-center gap-2 font-medium">
@@ -241,8 +241,8 @@ export default function ReviewMilestonePage() {
               {decisionMade === "approved"
                 ? "✅ Funds released! Redirecting..."
                 : decisionMade === "rejected"
-                  ? "❌ Submission rejected. Redirecting..."
-                  : "🔄 Revisions requested. Redirecting..."}
+                ? "❌ Submission rejected. Redirecting..."
+                : "🔄 Revisions requested. Redirecting..."}
             </p>
           </div>
         </div>
@@ -360,7 +360,11 @@ export default function ReviewMilestonePage() {
                   className="w-4 h-4 accent-blue-500"
                 />
                 <span
-                  className={`text-sm flex-1 ${item.checked ? "line-through text-slate-400" : "text-slate-700"}`}
+                  className={`text-sm flex-1 ${
+                    item.checked
+                      ? "line-through text-slate-400"
+                      : "text-slate-700"
+                  }`}
                 >
                   {item.label}
                 </span>

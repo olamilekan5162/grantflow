@@ -87,14 +87,14 @@ export default function SubmitMilestoneProofPage() {
           images: uploadedImages,
           documents: uploadedDocs,
           timestamp: Date.now(),
-        },
+        }
       );
       setSubmitted(true);
       setTimeout(() => router.push("/recipient/dashboard"), 2000);
     } catch (err) {
       console.error("Proof submission failed:", err);
       setSubmitError(
-        err.message || "Failed to submit proof. Please try again.",
+        err.message || "Failed to submit proof. Please try again."
       );
     } finally {
       setSubmitting(false);
@@ -156,8 +156,8 @@ export default function SubmitMilestoneProofPage() {
             <p className="text-sm text-slate-500 mt-0.5">{ms.description}</p>
           </div>
           <div className="text-right">
-            <span className="text-2xl font-bold text-emerald-600">
-              ${(ms.amount || 0).toLocaleString()}
+            <span className="text-xl font-bold text-emerald-600">
+              {(ms.amount || 0).toLocaleString()} HBAR
             </span>
             <p className="text-xs text-slate-400">
               {ms.percentage || 0}% of budget
@@ -220,7 +220,9 @@ export default function SubmitMilestoneProofPage() {
             <Info size={16} className="text-blue-500 shrink-0 mt-0.5" />
             <p className="text-sm text-blue-700">
               {ms.verificationType === "approver"
-                ? `This milestone requires verification by ${ms.verifier ? "an assigned verifier" : "a verifier"}. Funds will be released after approval.`
+                ? `This milestone requires verification by ${
+                    ms.verifier ? "an assigned verifier" : "a verifier"
+                  }. Funds will be released after approval.`
                 : "This milestone is self-verified. Funds will be released after you submit this proof."}
             </p>
           </div>

@@ -242,14 +242,20 @@ function FeaturedGrantCard({ grant }) {
         <span className="bg-blue-100 text-blue-700 text-xs font-medium px-2.5 py-1 rounded-full">
           {grant.category || "General"}
         </span>
-        <span className="text-xs text-slate-400">{grant.currency || "HBAR"}</span>
+        <span className="text-xs text-slate-400">
+          {grant.currency || "HBAR"}
+        </span>
       </div>
-      <h3 className="font-bold text-slate-900 mb-1 leading-tight">{grant.title}</h3>
-      <p className="text-xs text-slate-500 mb-4 font-mono truncate">{grant.funder}</p>
+      <h3 className="font-bold text-slate-900 mb-1 leading-tight">
+        {grant.title}
+      </h3>
+      <p className="text-xs text-slate-500 mb-4 font-mono truncate">
+        {grant.funder}
+      </p>
       <div className="flex justify-between text-sm mb-2">
         <span className="text-slate-500">Budget</span>
         <span className="font-semibold text-slate-900">
-          ${budget.toLocaleString()}
+          {budget.toLocaleString()} HBAR
         </span>
       </div>
       {disbursedPct > 0 && (

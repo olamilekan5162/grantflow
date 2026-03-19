@@ -19,7 +19,7 @@ export default function GrantCard({ grant, context = "explore", onApply }) {
   const disbursedPct = budget > 0 ? Math.round((disbursed / budget) * 100) : 0;
   const statusInfo = STATUS_CONFIG[grant.status] || STATUS_CONFIG.active;
   const completedMilestones = milestones.filter(
-    (m) => m.status === "completed",
+    (m) => m.status === "completed"
   ).length;
 
   return (
@@ -48,7 +48,7 @@ export default function GrantCard({ grant, context = "explore", onApply }) {
         <div className="flex justify-between text-sm">
           <span className="text-slate-500">Total Budget</span>
           <span className="font-semibold text-slate-900">
-            ${budget.toLocaleString()}
+            {budget.toLocaleString()} HBAR
           </span>
         </div>
 
@@ -90,7 +90,7 @@ export default function GrantCard({ grant, context = "explore", onApply }) {
                 <Clock size={12} />
                 Due{" "}
                 {new Date(
-                  grant.applicationDeadline || grant.deadline,
+                  grant.applicationDeadline || grant.deadline
                 ).toLocaleDateString("en-US", {
                   month: "short",
                   day: "numeric",

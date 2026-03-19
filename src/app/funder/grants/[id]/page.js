@@ -134,7 +134,7 @@ export default function FunderGrantPage() {
         <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
           <p className="text-xs text-slate-500 mb-1">Total Budget</p>
           <p className="text-xl font-bold text-slate-900">
-            ${budget.toLocaleString()}
+            {budget.toLocaleString()} HBAR
           </p>
           <p className="text-xs text-slate-400">{grant.currency || ""}</p>
         </div>
@@ -239,7 +239,7 @@ export default function FunderGrantPage() {
                   <div className="text-right">
                     <p className="font-bold text-slate-900">{ms.percentage}%</p>
                     <p className="text-xs text-slate-400">
-                      ${(ms.amount || 0).toLocaleString()}
+                      {(ms.amount || 0).toLocaleString()} HBAR
                     </p>
                   </div>
                 </div>
@@ -322,8 +322,8 @@ export default function FunderGrantPage() {
                         app.status === "approved"
                           ? "bg-emerald-100 text-emerald-700"
                           : app.status === "pending"
-                            ? "bg-amber-100 text-amber-700"
-                            : "bg-red-100 text-red-700"
+                          ? "bg-amber-100 text-amber-700"
+                          : "bg-red-100 text-red-700"
                       }`}
                     >
                       {app.status.charAt(0).toUpperCase() + app.status.slice(1)}
