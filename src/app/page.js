@@ -17,10 +17,10 @@ import {
 } from "lucide-react";
 
 const STATS = [
-  { value: "$2.5M+", label: "Total Funded" },
-  { value: "147", label: "Active Grants" },
-  { value: "89", label: "Organizations" },
-  { value: "423", label: "Recipients Paid" },
+  { value: "200 HBAR", label: "Total Funded" },
+  { value: "2", label: "Active Grants" },
+  { value: "2", label: "Organizations" },
+  { value: "2", label: "Recipients Paid" },
 ];
 
 const HOW_IT_WORKS = [
@@ -51,7 +51,6 @@ const TRUSTED_ORGS = [
 ];
 
 export default function LandingPage() {
-  const { setShowWalletModal, isConnected } = useApp();
   const { loadAllGrants, loading } = useGrantFlow();
   const [grants, setGrants] = useState([]);
 
