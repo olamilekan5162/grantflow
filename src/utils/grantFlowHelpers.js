@@ -196,21 +196,25 @@ export function buildGrantSummary(grantMsg, grantData, allMessages) {
     (m) => m.type === "MILESTONE_APPROVED" && m.grantId === grantId,
   );
 
+  const totalBudget = grantData.totalBudget || grantData.budget || 0;
+
   const disbursed = approvedMilestones.reduce((sum, m) => {
-    // We need to find the milestone amount from the grant data if not in the message
     const msIndex = m.milestoneIndex;
-    const msAmount = grantData.milestones?.[msIndex]?.amount || 0;
-    return sum + msAmount;
+    let msAmount = grantData.milestones?.[msIndex]?.amount;
+    // Fallback: calculate from percentage if amount field is missing
+    if (!msAmount && grantData.milestones?.[msIndex]) {
+      const pct = grantData.milestones[msIndex].percentage || 0;
+      msAmount = (totalBudget * pct) / 100;
+    }
+    return sum + (msAmount || 0);
   }, 0);
 
   // Determine if grant is completed
-  // Logic: All approved recipients must have completed all their milestones
   let status = "active";
   const numMilestones = grantData.milestones?.length || 0;
   const maxRecipients = grantData.maxRecipients || 0;
 
   if (maxRecipients > 0 && approvedProposals.length >= maxRecipients) {
-    // Check if EVERY approved proposal has ALL milestones completed
     const allFinished = approvedProposals.every((p) => {
       for (let i = 0; i < numMilestones; i++) {
         if (getMilestoneStatus(allMessages, p.proposalId, i) !== "completed") {
@@ -225,6 +229,9 @@ export function buildGrantSummary(grantMsg, grantData, allMessages) {
     }
   }
 
+  // Build transaction timeline
+  const timeline = buildGrantTimeline(grantId, allMessages, grantData, totalBudget);
+
   return {
     ...grantData,
     grantId,
@@ -233,6 +240,81 @@ export function buildGrantSummary(grantMsg, grantData, allMessages) {
     applicationCount: proposals.length,
     approvedCount: approvedProposals.length,
     disbursed,
+    totalBudget,
     status: grantData.status === "completed" ? "completed" : status,
+    timeline,
   };
 }
+
+/**
+ * Build a simple chronological timeline from HCS messages for a grant.
+ * Events link to the Hedera Testnet Explorer using the stored txId.
+ */
+function buildGrantTimeline(grantId, messages, grantData, totalBudget) {
+  const relevant = messages
+    .filter((m) => m.grantId === grantId)
+    .sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+
+  const events = [];
+
+  for (const m of relevant) {
+    switch (m.type) {
+      case "GRANT_CREATED":
+        events.push({
+          type: "created",
+          event: "Grant Created",
+          date: m.timestamp,
+          txId: m.txId || null,
+        });
+        break;
+      case "PROPOSAL_SUBMITTED":
+        events.push({
+          type: "info",
+          event: "New Application Received",
+          date: m.timestamp,
+        });
+        break;
+      case "PROPOSAL_APPROVED":
+        events.push({
+          type: "approved",
+          event: "Recipient Approved",
+          date: m.timestamp,
+        });
+        break;
+      case "MILESTONE_SUBMITTED":
+        events.push({
+          type: "info",
+          event: `Milestone ${(m.milestoneIndex ?? 0) + 1} Proof Submitted`,
+          date: m.timestamp,
+        });
+        break;
+      case "MILESTONE_APPROVED": {
+        const msIndex = m.milestoneIndex ?? 0;
+        let amount = grantData.milestones?.[msIndex]?.amount;
+        if (!amount && grantData.milestones?.[msIndex]) {
+          const pct = grantData.milestones[msIndex].percentage || 0;
+          amount = ((totalBudget || 0) * pct) / 100;
+        }
+        events.push({
+          type: "payment",
+          event: `Milestone ${msIndex + 1} Approved & Paid`,
+          date: m.timestamp,
+          amount: amount || 0,
+          txId: m.txId || null,
+        });
+        break;
+      }
+      case "MILESTONE_REVISION_REQUESTED":
+        events.push({
+          type: "info",
+          event: `Revision Requested — Milestone ${(m.milestoneIndex ?? 0) + 1}`,
+          date: m.timestamp,
+        });
+        break;
+    }
+  }
+
+  // Newest first for the UI
+  return events.sort((a, b) => (b.date || 0) - (a.date || 0));
+}
+

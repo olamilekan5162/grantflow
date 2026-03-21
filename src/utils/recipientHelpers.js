@@ -7,6 +7,7 @@ import {
   getMessages,
   getProposalStatus,
   getMilestoneStatus,
+  buildGrantSummary,
 } from "./grantFlowHelpers";
 import { getData } from "@/lib/utils";
 
@@ -199,19 +200,20 @@ export async function getGrantDetails(grantId) {
   try {
     const grantData = await getData(grantMsg.ipfsHash);
 
+    // Use buildGrantSummary to get disbursed, status, and timeline
+    const summary = buildGrantSummary(grantMsg, grantData, messages);
+
+    // Also include applications list
     const proposals = messages.filter(
       (m) => m.type === "PROPOSAL_SUBMITTED" && m.grantId === grantId,
     );
 
     return {
-      ...grantData,
-      grantId,
-      funder: grantMsg.funder,
-      createdAt: grantMsg.timestamp,
-      applicationCount: proposals.length,
+      ...summary,
       applications: proposals.map((p) => ({
         proposalId: p.proposalId,
         recipient: p.recipient,
+        name: p.name,
         submittedAt: p.timestamp,
         status: getProposalStatus(messages, p.proposalId),
       })),

@@ -11,6 +11,11 @@ import {
   Download,
   Loader2,
 } from "lucide-react";
+import { DollarSign } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
+import { Rocket } from "lucide-react";
+import { Info } from "lucide-react";
+import { Flag } from "lucide-react";
 
 export default function PublicGrantDetailsPage() {
   const { id } = useParams();
@@ -82,13 +87,12 @@ export default function PublicGrantDetailsPage() {
   };
 
   const TIMELINE_ICON = {
-    payment: "💰",
-    approved: "✅",
-    created: "🚀",
-    info: "ℹ️",
-    ended: "🏁",
+    payment: <DollarSign size={16} />,
+    approved: <CheckCircle2 size={16} />,
+    created: <Rocket size={16} />,
+    info: <Info size={16} />,
+    ended: <Flag size={16} />,
   };
-
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <button
@@ -255,7 +259,7 @@ export default function PublicGrantDetailsPage() {
                 No transactions yet
               </div>
             ) : (
-              <div className="space-y-2">
+              <div className="space-y-2 h-[300px] overflow-y-auto">
                 {timeline.map((item, i) => (
                   <div key={i} className="flex gap-4">
                     <div className="flex flex-col items-center">
@@ -281,24 +285,24 @@ export default function PublicGrantDetailsPage() {
                               })}
                             </p>
                           </div>
-                          {item.amount && (
+                          {item.amount > 0 && (
                             <span className="text-emerald-600 font-bold text-sm shrink-0">
-                              ${item.amount.toLocaleString()}
+                              {item.amount.toLocaleString()} HBAR
                             </span>
                           )}
                         </div>
-                        {item.txHash && (
-                          <div className="mt-2 text-xs text-slate-400 font-mono truncate">
-                            Tx: {item.txHash}
+                        {item.txId && (
+                          <div className="mt-2 flex items-center gap-1.5">
+                            <a
+                              href={`https://hashscan.io/testnet/transaction/${item.txId}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-xs text-blue-600 hover:underline flex items-center gap-1 font-mono truncate"
+                            >
+                              <ExternalLink size={11} className="shrink-0" />
+                              {item.txId}
+                            </a>
                           </div>
-                        )}
-                        {item.type === "payment" && (
-                          <button
-                            onClick={() => setModalProof(item)}
-                            className="mt-2 text-xs text-blue-600 hover:underline flex items-center gap-1"
-                          >
-                            <ExternalLink size={11} /> View Proof
-                          </button>
                         )}
                       </div>
                     </div>

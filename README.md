@@ -1,4 +1,4 @@
-# GrantFlow 🌐
+# GrantFlow
 
 > **Transparent, Milestone-Based Grant Management on Hedera**
 
@@ -6,48 +6,49 @@ GrantFlow is a decentralized grant management platform built on the Hedera netwo
 
 ---
 
-## 🏆 Hackathon Submission
+## Hackathon Submission
 
-| Field | Details |
-|---|---|
-| **Track** | DeFi / Public Goods & Social Impact |
-| **Demo Video** | *(Insert YouTube link)* |
-| **Live Demo** | *(Insert deployment URL)* |
+| Field          | Details                                |
+| -------------- | -------------------------------------- |
+| **Track**      | Sustainability                         |
+| **Demo Video** | _(https://youtu.be/778g961W52c)_       |
+| **Live Demo**  | _(http://grantflow-omega.vercel.app/)_ |
 
 ---
 
-## 📋 Project Description
+## Project Description
 
 GrantFlow is a trustless grant management platform that puts milestone-based disbursements on-chain. Funders lock HBAR in a Hedera Smart Contract escrow at creation. Recipients apply, submit milestone proofs, and funds are released automatically by the contract upon funder approval. Every event — application, approval, disbursement — is recorded immutably on the Hedera Consensus Service (HCS), giving all parties a verifiable, real-time audit trail.
 
-*(≈ 80 words)*
-
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 ### Hedera Network Services
-| Service | Usage |
-|---|---|
-| **Hedera Consensus Service (HCS)** | Immutable on-chain log of all grant events (creation, applications, approvals, payments) |
-| **Hedera Smart Contract Service** | Escrow contract (`GrantEscrow.sol`) for locking and releasing funds milestone-by-milestone |
-| **Hedera Mirror Node** | Real-time querying of HCS messages to build the UI data layer |
+
+| Service                            | Usage                                                                                      |
+| ---------------------------------- | ------------------------------------------------------------------------------------------ |
+| **Hedera Consensus Service (HCS)** | Immutable on-chain log of all grant events (creation, applications, approvals, payments)   |
+| **Hedera Smart Contract Service**  | Escrow contract (`GrantEscrow.sol`) for locking and releasing funds milestone-by-milestone |
+| **Hedera Mirror Node**             | Real-time querying of HCS messages to build the UI data layer                              |
 
 ### Ecosystem & Infrastructure
-| Technology | Usage |
-|---|---|
-| **WalletConnect (Hedera Wallet Connect SDK)** | Non-custodial wallet authentication for all user roles |
-| **Pinata / IPFS** | Decentralized storage for grant metadata, proposals, and milestone proofs |
-| **Next.js 14 (App Router)** | Full-stack React framework powering the frontend |
-| **Solidity** | Smart contract language for the on-chain escrow logic |
-| **Hiero Ledger SDK** | Interacting with Hedera services from the backend |
-| **Vercel** | Hosting and deployment |
+
+| Technology                                    | Usage                                                                     |
+| --------------------------------------------- | ------------------------------------------------------------------------- |
+| **WalletConnect (Hedera Wallet Connect SDK)** | Non-custodial wallet authentication for all user roles                    |
+| **Pinata / IPFS**                             | Decentralized storage for grant metadata, proposals, and milestone proofs |
+| **Next.js 14 (App Router)**                   | Full-stack React framework powering the frontend                          |
+| **Solidity**                                  | Smart contract language for the on-chain escrow logic                     |
+| **Hiero Ledger SDK**                          | Interacting with Hedera services from the backend                         |
+| **Vercel**                                    | Hosting and deployment                                                    |
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
+
 - Node.js 18+
 - `pnpm` (recommended) or `npm`
 - A Hedera Testnet account (via [HashPack](https://www.hashpack.app/) or [Kabila](https://www.kabila.app/))
@@ -100,6 +101,7 @@ NEXT_PUBLIC_PINATA_GATEWAY=your_pinata_gateway_url
 The escrow contract is located at `src/contracts/GrantEscrow.sol`.
 
 You can deploy it using:
+
 - **Hedera Portal / Hedera Playground** (https://portal.hedera.com) — Recommended for testnet
 - Or any Solidity-compatible tooling (Hardhat, Remix)
 
@@ -119,7 +121,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ---
 
-## 🗺️ Application Structure
+## Application Structure
 
 ```
 src/
@@ -147,7 +149,7 @@ src/
 
 ---
 
-## ✨ Key Features
+## Key Features
 
 - **Escrow-Protected Funding** — Grant budgets are locked in a smart contract at creation; no funds can be released without milestone verification.
 - **Milestone-Gated Payments** — Recipients submit proof for each milestone; funds release only upon funder approval.
@@ -158,7 +160,7 @@ src/
 
 ---
 
-## 🧪 Testing Instructions
+## Testing Instructions
 
 1. **Connect Wallet** — Click "Connect Wallet" and connect a Hedera Testnet wallet (HashPack recommended).
 2. **Create a Grant (Funder Role)** — Navigate to `/funder/grants/create`, fill in the details, define milestones (must total 100%), and deposit HBAR into the escrow.
@@ -170,6 +172,6 @@ src/
 
 ---
 
-## 📄 License
+## License
 
 This project is open-source and available under the [MIT License](LICENSE).
