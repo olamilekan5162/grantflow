@@ -57,7 +57,7 @@ export function AppProvider({ children }) {
         return null;
       }
     },
-    [account]
+    [account],
   );
 
   useEffect(() => {
@@ -69,11 +69,10 @@ export function AppProvider({ children }) {
         if (!connector) return;
         // Check for an existing session to restore after page reload
         const activeSessions = connector.walletConnectClient?.session?.values;
-        console.log("Active sessions:", activeSessions);
 
         if (activeSessions && [...activeSessions].length > 0) {
           const activeSession = [...activeSessions][0];
-          console.log(activeSession);
+
           const account = activeSession.namespaces?.hedera?.accounts?.[0];
           if (account) {
             const accountId = account.split(":").pop() ?? null;
@@ -116,12 +115,18 @@ export function AppProvider({ children }) {
 
   const disconnect = async () => {
     const connector = getConnector();
-    if (connector) {
-      await connector.disconnect();
+    setLoading(true);
+    if (!connector) {
+      return;
+    }
+    try {
+      await connector.disconnectAll();
       setIsConnected(false);
       setAccount(null);
       setBalance(null);
       setMemo(null);
+    } finally {
+      setLoading(false);
     }
   };
 
