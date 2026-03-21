@@ -55,6 +55,7 @@ export default function ClientOnboarding() {
 
   return (
     <OnboardingModal
+      onClose={() => setShowOnboarding(false)}
       onComplete={handleOnboardingComplete}
       updateAccountInfo={updateAccountInfo}
     />

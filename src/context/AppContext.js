@@ -57,38 +57,35 @@ export function AppProvider({ children }) {
         return null;
       }
     },
-    [account],
+    [account]
   );
 
   useEffect(() => {
     const init = async () => {
-      await initializeWalletConnect();
-      const connector = getConnector();
-      if (!connector) return;
+      setLoading(true);
+      try {
+        await initializeWalletConnect();
+        const connector = getConnector();
+        if (!connector) return;
+        // Check for an existing session to restore after page reload
+        const activeSessions = connector.walletConnectClient?.session?.values;
+        console.log("Active sessions:", activeSessions);
 
-      // Check for an existing session to restore after page reload
-      let activeSession = connector.session;
-
-      if (!activeSession && connector.signClient?.session) {
-        const sessions =
-          typeof connector.signClient.session.getAll === "function"
-            ? connector.signClient.session.getAll()
-            : connector.signClient.session.values || [];
-
-        if (sessions.length > 0) {
-          activeSession = sessions[sessions.length - 1]; // Use the most recent session
-          connector.session = activeSession; // Assign it to the connector
+        if (activeSessions && [...activeSessions].length > 0) {
+          const activeSession = [...activeSessions][0];
+          console.log(activeSession);
+          const account = activeSession.namespaces?.hedera?.accounts?.[0];
+          if (account) {
+            const accountId = account.split(":").pop() ?? null;
+            setAccount(accountId);
+            setIsConnected(true);
+            await getAccountInfo(accountId);
+          }
         }
-      }
-
-      if (activeSession) {
-        const accounts = activeSession.namespaces?.hedera?.accounts || [];
-        if (accounts.length > 0) {
-          const accountId = accounts[0].split(":").pop();
-          setAccount(accountId);
-          setIsConnected(true);
-          await getAccountInfo(accountId);
-        }
+      } catch (error) {
+        console.error("Failed to initialize WalletConnect:", error);
+      } finally {
+        setLoading(false);
       }
     };
     init();
