@@ -70,7 +70,13 @@ export default function OnboardingModal({
     setSaving(true);
     setError("");
     try {
-      const memoPayload = JSON.stringify({ role, ...form });
+      // Only store role + primary name in the Hedera memo (100-byte limit).
+      // The other form fields are for the demo UI only.
+      const memoPayload =
+        role === "funder"
+          ? JSON.stringify({ role, orgName: form.orgName || "" })
+          : JSON.stringify({ role, name: form.name || "" });
+
       await updateAccountInfo(memoPayload);
       setDone(true);
       setTimeout(() => onComplete(role), 1200);
@@ -171,6 +177,7 @@ export default function OnboardingModal({
                     <input
                       className={inputCls}
                       placeholder="e.g., City of Austin Arts Dept"
+                      maxLength={50}
                       value={form.orgName || ""}
                       onChange={setField("orgName")}
                     />
@@ -212,6 +219,7 @@ export default function OnboardingModal({
                     <input
                       className={inputCls}
                       placeholder="Your name or org"
+                      maxLength={50}
                       value={form.name || ""}
                       onChange={setField("name")}
                     />
