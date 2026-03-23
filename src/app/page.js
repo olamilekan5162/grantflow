@@ -16,12 +16,6 @@ import {
   Loader2,
 } from "lucide-react";
 
-const STATS = [
-  { value: "200 HBAR", label: "Total Funded" },
-  { value: "2", label: "Active Grants" },
-  { value: "2", label: "Organizations" },
-  { value: "2", label: "Recipients Paid" },
-];
 
 const HOW_IT_WORKS = [
   {
@@ -53,17 +47,46 @@ const TRUSTED_ORGS = [
 export default function LandingPage() {
   const { loadAllGrants, loading } = useGrantFlow();
   const [grants, setGrants] = useState([]);
+  const [allGrants, setAllGrants] = useState([]);
 
   useEffect(() => {
     async function fetchGrants() {
       const all = await loadAllGrants();
       if (all) {
-        // Only show 3 most recent
+        setAllGrants(all);
+        // Only show 3 most recent in the featured section
         setGrants(all.slice(0, 3));
       }
     }
     fetchGrants();
   }, [loadAllGrants]);
+
+  // Compute live stats from real on-chain data
+  const stats = loading
+    ? null
+    : {
+        totalFunded: allGrants.reduce(
+          (sum, g) => sum + (g.totalBudget || g.budget || 0),
+          0,
+        ),
+        activeGrants: allGrants.filter((g) => g.status !== "completed").length,
+        organizations: new Set(allGrants.map((g) => g.funder).filter(Boolean))
+          .size,
+        recipientsPaid: allGrants.reduce(
+          (sum, g) => sum + (g.approvedCount || 0),
+          0,
+        ),
+      };
+
+  const STATS = [
+    {
+      value: stats ? `${stats.totalFunded.toLocaleString()} HBAR` : "—",
+      label: "Total Funded",
+    },
+    { value: stats ? stats.activeGrants : "—", label: "Active Grants" },
+    { value: stats ? stats.organizations : "—", label: "Organizations" },
+    { value: stats ? stats.recipientsPaid : "—", label: "Recipients Paid" },
+  ];
 
   return (
     <div>
