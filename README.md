@@ -11,7 +11,7 @@ GrantFlow is a decentralized grant management platform built on the Hedera netwo
 | Field          | Details                                |
 | -------------- | -------------------------------------- |
 | **Track**      | Sustainability                         |
-| **Demo Video** | _(https://youtu.be/778g961W52c)_       |
+| **Demo Video** | _(https://youtu.be/MFNyOUZppFs)_       |
 | **Live Demo**  | _(http://grantflow-omega.vercel.app/)_ |
 
 ---
